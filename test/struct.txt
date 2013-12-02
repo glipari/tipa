@@ -1,0 +1,6 @@
+sys(mysys) {
+	task(t1) {
+		wcet=4; 
+		period=20;
+        };
+};

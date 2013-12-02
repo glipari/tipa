@@ -1,0 +1,75 @@
+sys(mysys) {
+	task(t1) {
+		wcet=4; 
+		period=20;
+		dline=20;
+		priority=3;
+		sched="fpfp";
+		node=0;
+	};
+	task(t3) {
+		wcet=5;
+		period=30;
+		dline=30;	
+		priority=3;
+		sched="fpfp";
+		node=2;
+	};
+	task(t5) {
+		wcet=100;
+		period=200;
+		dline=200;
+		priority=1;
+		sched="fpfp";
+		node=2;
+	};
+	pipeline(p1) {
+		Period=150; # the period of the pipeline event
+		E2Edline=150; # the end-to-end deadline of the pipeline
+		task(t21){
+			wcet=20; 
+			period=150; # optional; by default it will be set as the Period value of the pipeline
+			dline=150;  # optional; by default it will be set as the E2Edline value of the pipeline 
+			priority=2;
+			sched="fpfp";
+			node=0;
+			pos=1; # the position inside the pipeline
+		};
+		task(t22){
+			wcet=25; #1;
+			period=150;
+			dline=150;
+			priority=2;
+			sched="fpnp";
+			node=1;
+			pos=2;
+		};
+		task(t23){
+			wcet=15;
+			period=150;
+			dline=150;
+			priority=2;
+			sched="fpfp";
+			node=2;
+			pos=3;
+		};
+		task(t24){
+			wcet=34;
+			period=150;
+			dline=150;
+			priority=1;
+			sched="fpnp";
+			node=1;
+			pos=4;
+		};
+		task(t25){
+			wcet=30;
+			period=150;
+			dline=150;
+			priority=1;
+			sched="fpfp";
+			node=0;
+			pos=5;
+		};
+	};
+};
