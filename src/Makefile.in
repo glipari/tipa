@@ -122,7 +122,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libtinyparser_la_LIBADD =
-am_libtinyparser_la_OBJECTS = lexer.lo parser.lo
+am_libtinyparser_la_OBJECTS = lexer.lo tinyparser.lo
 libtinyparser_la_OBJECTS = $(am_libtinyparser_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -320,7 +320,7 @@ lib_LTLIBRARIES = libtinyparser.la
 #bin_PROGRAMS = example 
 AM_CPPFLAGS = $(BOOST_CPPFLAGS) -std=c++0x -Wall
 AM_LDFLAGS = $(BOOST_REGEX_LDFLAGS)
-libtinyparser_la_SOURCES = lexer.cpp parser.cpp
+libtinyparser_la_SOURCES = lexer.cpp tinyparser.cpp
 all: all-am
 
 .SUFFIXES:
@@ -401,7 +401,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lexer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tinyparser.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -1,4 +1,5 @@
-#ifndef __PARSE_HPP__
+#ifndef __TINYPARSE_HPP__
+#define __TINYPARSE_HPP__
 
 #include <vector>
 #include <lexer.hpp>

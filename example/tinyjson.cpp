@@ -4,7 +4,7 @@
 #include <fstream>
 #include <memory>
 
-#include <parser.hpp>
+#include <tinyparser.hpp>
 #include <property.hpp>
 
 using namespace std;

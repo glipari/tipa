@@ -7,7 +7,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <parser.hpp>
+#include <tinyparser.hpp>
 
 using namespace std;
 
