@@ -23,9 +23,9 @@ TEST_CASE( "Collecting two integers", "[collector]")
     pair<int, int> result;
     auto f = [&result](parser_context &pc) {
 	auto v = pc.collect_tokens();
-	if (v.size() == 3) { 
+	if (v.size() == 2) { 
 	    result.first = atoi(v[0].second.c_str());
-	    result.second = atoi(v[2].second.c_str());
+	    result.second = atoi(v[1].second.c_str());
 	} else 
 	    cout << "Not enough elements" << endl;
     }; 
@@ -54,13 +54,13 @@ TEST_CASE( "Collecting n integers", "[collector]")
 	INFO("Calling the function to collect parameters");
 	auto tv = pc.collect_tokens();
 	for (unsigned int i = 0; i<tv.size(); i++) 
-	    if (i % 2 == 0)
+	    // if (i % 2 == 0)
 		results.push_back(atoi(tv[i].second.c_str()));
 	//results.pop_back();
 	return true;
     };
 
-    vector<int> expect = {1, 2, 3, 4, 5, 0};
+    vector<int> expect = {1, 2, 3, 4, 5};
 
     rule expr;
     rule op = rule('+') | rule('-');

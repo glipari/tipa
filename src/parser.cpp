@@ -162,8 +162,9 @@ struct impl_rule {
 
 class term_rule : public abs_rule {
     token mytoken;
+    bool collect;
 public:
-    term_rule(const token &tk) : mytoken(tk) {}
+    term_rule(const token &tk, bool c = true) : mytoken(tk), collect(c) {}
     virtual bool parse(parser_context &pc);
 };
 
@@ -195,22 +196,22 @@ static std::string padding(const std::string &p)
     return r;
 }
 
-rule::rule(char c)
+rule::rule(char c, bool collect)
 {
     std::string p{c};
     p = padding(p);
     token tk = {LEX_CHAR, p};
-    pimpl = std::make_shared<impl_rule>(new term_rule(tk));
+    pimpl = std::make_shared<impl_rule>(new term_rule(tk, collect));
 }
 
-rule::rule(const std::string &s)
+rule::rule(const std::string &s, bool collect)
 {
     std::string p = padding(s);
     token tk = {LEX_CHAR, p};
-    pimpl = std::make_shared<impl_rule>(new term_rule(tk));
+    pimpl = std::make_shared<impl_rule>(new term_rule(tk, collect));
 }
 
-rule::rule(const token &tk) : pimpl(new impl_rule(new term_rule(tk)))
+rule::rule(const token &tk) : pimpl(new impl_rule(new term_rule(tk, true)))
 {
 }
 
@@ -240,7 +241,7 @@ bool term_rule::parse(parser_context &pc)
     token_val result = pc.try_token(mytoken);
     if (result.first == mytoken.get_name()) {
 	INFO_LINE(" ** ok");
-	pc.push_token(result);
+	if (collect) pc.push_token(result);
 	return true;
     } else {
 	INFO_LINE(" ** FALSE");

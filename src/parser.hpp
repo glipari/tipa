@@ -58,26 +58,33 @@ typedef std::function< void(parser_context &)> action_t;
 class rule {
     std::shared_ptr<impl_rule> pimpl;    
 public:
+    /// An empty rule
     rule();
+    /// A copy constructor
     rule(const rule &r); 
 
-    // A rule that matches a simple character
-    explicit rule(char c);
+    /// A rule that matches a simple character
+    /// By default, this rule will NOT collect the character
+    explicit rule(char c, bool collect = false);
+
     // A rule that matches a string of characters
-    explicit rule(const std::string &s);
-    // A rule that matches a token
+    /// By default, this rule will NOT collect the character
+    explicit rule(const std::string &s, bool collect = false);
+
+    /// A rule that matches a token
+    /// This rule will collect the token
     explicit rule(const token &tk);
 
-    // Assigmnent between rules
+    /// Assigmnent between rules
     rule &operator=(const rule &);
     
-    // Parses a rule
+    /// Parses a rule
     bool parse(parser_context &pc);
-    // Sets an action for this rule
+    /// Sets an action for this rule
     rule& operator[](action_t af); 
 
 
-    // internal use only!!
+    /// internal use only!!
     explicit rule(std::shared_ptr<impl_rule> ir);
     std::shared_ptr<impl_rule> get_pimpl() { return pimpl; }
 };
