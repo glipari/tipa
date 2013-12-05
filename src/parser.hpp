@@ -104,6 +104,6 @@ rule extract_rule(const std::string &opcl);
 rule extract_line_rule(const std::string &opcl);
 
 /* Matches a given keyword */
-rule keyword(const std::string &key);
+rule keyword(const std::string &key, bool collect = true);
 
 #endif

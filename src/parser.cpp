@@ -410,7 +410,7 @@ class keyword_rule : public abs_rule {
     std::string kw;
     term_rule rl;
 public:
-    keyword_rule(const std::string &key) : kw(key), rl(tk_ident) {}
+    keyword_rule(const std::string &key, bool collect) : kw(key), rl(tk_ident, collect) {}
 
     virtual bool parse(parser_context &pc);
 };
@@ -448,8 +448,8 @@ rule extract_line_rule(const std::string &opcl)
     return rule(s);
 }
 
-rule keyword(const std::string &key)
+rule keyword(const std::string &key, bool collect)
 {
-    auto s = std::make_shared<impl_rule>(new keyword_rule(key));
+    auto s = std::make_shared<impl_rule>(new keyword_rule(key, collect));
     return rule(s);
 }
