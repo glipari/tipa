@@ -10,6 +10,7 @@
 #include <lexer.hpp>
 
 using namespace std;
+using namespace tipa;
 
 #define LEX_EQ       3
 #define LEX_QUOTES   4

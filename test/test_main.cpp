@@ -11,6 +11,7 @@
 #include <lexer.hpp>
 
 using namespace std;
+using namespace tipa;
 
 #define LEX_TYPE       1
 

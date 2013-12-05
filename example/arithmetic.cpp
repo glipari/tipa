@@ -6,8 +6,8 @@
 
 #include <tinyparser.hpp>
 
-
 using namespace std;
+using namespace tipa;
 
 #define LEX_PLUS    1
 #define LEX_MINUS   2

@@ -8,7 +8,7 @@
 #include <property.hpp>
 
 using namespace std;
-
+using namespace tipa;
 
 int main(int argc, char *argv[])
 {
