@@ -7,6 +7,9 @@
 
 namespace tipa {
 
+    parse_exc::parse_exc() 
+    {}
+
     parser_context::parser_context() : lex{}
     {}
 
@@ -124,7 +127,6 @@ namespace tipa {
 
     bool abs_rule::action(parser_context &pc)
     {
-	INFO_LINE("abs_rule::action()");
 	if (fun) {
 	    INFO_LINE("-- action found");
 	    fun(pc);
@@ -237,6 +239,7 @@ namespace tipa {
     }
 
 
+
     bool term_rule::parse(parser_context &pc)
     {
 	INFO("term_rule::parse() trying " << mytoken.get_expr());
@@ -276,7 +279,7 @@ namespace tipa {
 
     bool seq_rule::parse(parser_context &pc)
     {
-	INFO("seq_rule::parse(), curr-token: " << pc.get_token().second << " | ");
+	INFO("seq_rule::parse()");
 
 	pc.save();
 	for (auto &x : rl) {
@@ -320,7 +323,7 @@ namespace tipa {
 
     bool alt_rule::parse(parser_context &pc)
     {
-	INFO("alt_rule::parse(), curr-token: " << pc.get_token().second << " | ");
+	INFO("alt_rule::parse() | ");
 	for (auto &x : rl)
 	    if (x->parse(pc)) {
 		INFO_LINE(" ** ok");
@@ -356,7 +359,7 @@ namespace tipa {
 
     bool rep_rule::parse(parser_context &pc)
     {
-	INFO("rep_rule::parse(), curr-token: " << pc.get_token().second << " | ");
+	INFO("rep_rule::parse() | ");
 
 	while (rl->parse(pc)) {
 	    INFO("*");
@@ -456,4 +459,65 @@ namespace tipa {
 	return rule(s);
     }
 
+/* 
+   A sequence of rules to be evaluated in order. 
+   I expect that they match one after the other. 
+*/
+    class strict_seq_rule : public abs_rule {
+	std::vector< std::shared_ptr<impl_rule> > rl;
+    public:
+	strict_seq_rule(rule a, rule b);
+
+	virtual bool parse(parser_context &pc);
+    };
+
+    strict_seq_rule::strict_seq_rule(rule a, rule b)
+    {
+	rl.push_back(a.get_pimpl());
+	rl.push_back(b.get_pimpl());
+    }
+
+    bool strict_seq_rule::parse(parser_context &pc)
+    {
+	INFO("strict_seq_rule::parse()");
+
+	int i = 0;
+	for (auto &x : rl) {
+	    if (!x->parse(pc)) {
+		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+		INFO_LINE(" ** FALSE ");
+		//pc.restore();
+		if (i==0) return false; 
+		else throw parse_exc{};
+	    }
+	    i++;
+	}    
+	INFO_LINE(" ** ok ");
+	return true;
+    }
+
+    rule operator>(rule a, rule b)
+    {
+	auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
+	return rule(s);
+    }
 }
+
+
+/*
+  Error handling
+
+  One possibility is to define an error descriptor which contains
+
+  - The last token that has been tried
+  - The position of the failure
+  - An error message 
+
+  This error descriptor is saved on a stack every time we have an error.
+  The stack would be cleaned when we can proceed. 
+
+  The only rule that can cause such a problem is the alternation. So,
+  it is the alernation that must clean the stack is one good
+  alternative if found.
+
+*/

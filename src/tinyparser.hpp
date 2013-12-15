@@ -5,11 +5,20 @@
 #include <lexer.hpp>
 #include <memory>
 #include <functional>
+#include <exception>
 
 #define ERR_PARSE_SEQ   -100
 #define ERR_PARSE_ALT   -101
 
 namespace tipa {
+    class err_descriptor;
+
+    class parse_exc : public std::exception {
+    public:
+	parse_exc();
+    };
+
+
 /* 
    It contains the lexer and the last token that has been read, it is
    moved around the many rules in the parser
@@ -91,21 +100,24 @@ namespace tipa {
 	std::shared_ptr<impl_rule> get_pimpl() { return pimpl; }
     };
 
-/** Sequence of rules */
+/** Sequence of rules (with backtrack) */
     rule operator>>(rule a, rule b);
+
+/** Sequence of rules (no backtrack) */
+    rule operator>(rule a, rule b);
 
 /** Alternation of rules */
     rule operator|(rule a, rule b);
 
-/** repetion of rules */
+/** Repetion of rules */
     rule operator*(rule a);
 
-/** extracting part of the text */
+/** Extracting part of the text */
     rule extract_rule(const std::string &op, const std::string &cl);
     rule extract_rule(const std::string &opcl);
     rule extract_line_rule(const std::string &opcl);
 
-/* Matches a given keyword */
+/** Matches a given keyword */
     rule keyword(const std::string &key, bool collect = true);
 }
 

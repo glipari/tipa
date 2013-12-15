@@ -86,21 +86,18 @@ public:
 int main()
 {
     // These are the parsing rules
-    rule root, expr, primary, term, 
+    rule expr, primary, term, 
 	op_plus, op_minus, op_mult, op_div, r_int;
-
-    // the root expression is an expression followed by a semicolon
-    root = expr >> rule(';');
     
     // An expression is sequence of terms separated by + or -
     expr = term >> *(op_plus | op_minus);
-    op_plus = rule('+') >> term;    
-    op_minus = rule('-') >> term;
+    op_plus = rule('+') > term;    
+    op_minus = rule('-') > term;
 
     // A term is a sequence of primaries, separated by * or /
     term = primary >> *(op_mult | op_div);
-    op_mult = rule('*') >> primary;
-    op_div = rule('/') >> primary;
+    op_mult = rule('*') > primary;
+    op_div = rule('/') > primary;
 
     // A primary is either an integer or an expression within parenthesis
     primary = r_int | 
@@ -123,8 +120,8 @@ int main()
     /*****************************************************/
 
     string input;
-    cout << "Enter an arithmethic expression, terminated by a semicolon" << endl;
-    cout << "Example: 3 - (2 + 1);" << endl;
+    cout << "Enter an arithmethic expression" << endl;
+    cout << "Example: 3 - (2 + 1)" << endl;
     getline(cin, input);
 
     cout << "String to parse: " << input << endl;
@@ -139,8 +136,10 @@ int main()
     // We now parse, and build the syntax tree at once
     bool f = false;
     try {
-	f = root.parse(pc); 
-    } catch(...) {}
+	f = expr.parse(pc);
+    } catch(parse_exc &e) {
+	cout << "Parse exception!" << endl;
+    }
 
     if (!f) {
 	cout << pc.get_formatted_err_msg();
