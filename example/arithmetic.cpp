@@ -33,6 +33,13 @@ public:
     }
 };
 
+class var_node : public tree_node {
+    string name;
+public:
+    var_node(const string &v) : name(v) {}
+    virtual int compute() { return 0; }
+};
+
 class leaf_node : public tree_node {
     int value;
 public:
@@ -76,6 +83,15 @@ public:
 	st.push(n);
     }
     
+    
+    void make_var(parser_context &pc) {
+	auto x = pc.collect_tokens();
+	if (x.size() < 1) throw string("Error in collecting variable");
+	string v = x[x.size() - 1].second;
+	auto node = make_shared<var_node>(v);
+	st.push(node);
+    }
+
     int get_size() { return st.size(); }
 
     shared_ptr<tree_node> get_tree() {
@@ -87,7 +103,7 @@ int main()
 {
     // These are the parsing rules
     rule expr, primary, term, 
-	op_plus, op_minus, op_mult, op_div, r_int;
+	op_plus, op_minus, op_mult, op_div, r_int, r_var;
     
     // An expression is sequence of terms separated by + or -
     expr = term >> *(op_plus | op_minus);
@@ -100,17 +116,20 @@ int main()
     op_div = rule('/') > primary;
 
     // A primary is either an integer or an expression within parenthesis
-    primary = r_int | 
+    primary = r_int | r_var |
 	rule('(') >> expr >> rule(')');
 
     // An integer is an integer!
     r_int = rule(tk_int);
+
+    r_var = rule(tk_ident);
     
     // The following is used to build the syntax tree, 
     // which is used later for the calculations
     builder b; 
     using namespace std::placeholders;
     
+    r_var   [std::bind(&builder::make_var,            &b, _1)];
     r_int   [std::bind(&builder::make_leaf,           &b, _1)];
     op_plus [std::bind(&builder::make_op<plus_node>,  &b, _1)];
     op_minus[std::bind(&builder::make_op<minus_node>, &b, _1)];
@@ -128,7 +147,6 @@ int main()
     // the string to be parsed
     stringstream str(input);
 
-    // given as input
     // preparing the "context" of the parser
     parser_context pc;
     pc.set_stream(str);
