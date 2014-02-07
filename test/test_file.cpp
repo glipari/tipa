@@ -7,7 +7,7 @@
 #include <fstream>
 #include <sstream>
 
-#include <tinyparser.hpp>
+#include <tipa/tinyparser.hpp>
 
 using namespace std;
 using namespace tipa;

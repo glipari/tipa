@@ -1,7 +1,6 @@
 //#define __LOG__ 1
-#include <log_macros.hpp>
-
-#include "tinyparser.hpp"
+#include "log_macros.hpp"
+#include "tipa/tinyparser.hpp"
 
 #include <sstream>
 

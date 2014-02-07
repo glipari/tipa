@@ -1,9 +1,9 @@
 //#define __LOG__ 1
 #include <iomanip>
-#include <log_macros.hpp>
+#include "log_macros.hpp"
 
-#include <lexer.hpp>
 #include <boost/regex.hpp>
+#include <tipa/lexer.hpp>
 
 using namespace std;
 

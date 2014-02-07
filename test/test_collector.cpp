@@ -6,7 +6,7 @@
 #include <vector>
 #include <sstream>
 
-#include <tinyparser.hpp>
+#include <tipa/tinyparser.hpp>
 
 using namespace std;
 using namespace tipa;
@@ -51,7 +51,7 @@ TEST_CASE( "Collecting n integers", "[collector]")
     
     vector<int> results;
 
-    auto f = [&results](parser_context &pc) {
+    action_t f = [&results](parser_context &pc) {
 	INFO("Calling the function to collect parameters");
 	auto tv = pc.collect_tokens();
 	for (unsigned int i = 0; i<tv.size(); i++) 

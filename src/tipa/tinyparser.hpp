@@ -2,10 +2,10 @@
 #define __TINYPARSE_HPP__
 
 #include <vector>
-#include <lexer.hpp>
 #include <memory>
 #include <functional>
 #include <exception>
+#include <tipa/lexer.hpp>
 
 #define ERR_PARSE_SEQ   -100
 #define ERR_PARSE_ALT   -101
@@ -60,7 +60,7 @@ namespace tipa {
     };
 
 /// implementation dependent
-    class impl_rule;
+    struct impl_rule;
 
 /// The action function which is passed the parser context
     typedef std::function< void(parser_context &)> action_t;

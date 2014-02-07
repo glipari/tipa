@@ -4,7 +4,7 @@
 #include <sstream>
 #include <memory>
 
-#include <tinyparser.hpp>
+#include <tipa/tinyparser.hpp>
 
 using namespace std;
 using namespace tipa;
