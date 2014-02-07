@@ -8,4 +8,4 @@ Description: TinyParser C++ library.
 Version: @PACKAGE_VERSION@
 URL: @PACKAGE_URL@
 Libs: -L${libdir} -ltipa-@TIPA_API_VERSION@
-Cflags: -I${includedir}/tipa-@TIPA_API_VERSION@ -I${libdir}/example-@TIPA_API_VERSION@/include
+Cflags: -I${includedir}/tipa-@TIPA_API_VERSION@ -I${libdir}/tipa-@TIPA_API_VERSION@/include
