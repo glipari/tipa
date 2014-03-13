@@ -99,3 +99,22 @@ TEST_CASE("Null rule", "[parser]")
 	CHECK(expr.parse(pc));
     }
 }
+
+TEST_CASE("Test the repetition rule followed by a line break: *xx >> yy", "[parser]")
+{
+    stringstream str1("abc abc dd");
+    stringstream str2("abc abc \n dd");
+    parser_context pc1;
+    parser_context pc2;
+    SECTION("Section 1") {
+	pc1.set_stream(str1);
+	rule n1 = *(keyword("abc")) >> keyword("dd");
+	CHECK(n1.parse(pc1));
+    }
+    SECTION("Section 2") {
+	rule n2 = *(keyword("abc")) >> keyword("dd");
+
+	pc2.set_stream(str2);
+	CHECK(n2.parse(pc2));
+    }
+}
