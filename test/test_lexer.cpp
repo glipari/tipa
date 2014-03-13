@@ -125,4 +125,17 @@ TEST_CASE("save and restore", "[lexer]")
     }
 }
 
+TEST_CASE("Skip spaces", "[lexer]") 
+{
+    ahead_lexer lex({tk_int, tk_ident});
+    stringstream str("123 abc \n 789");
+    lex.set_stream(str);
+    token_val tk = lex.get_token();
+    REQUIRE(tk.second == "123");
+    tk = lex.get_token();
+    REQUIRE(tk.second == "abc");
+    tk = lex.get_token();
+    REQUIRE(tk.second == "789");
+}
+
 

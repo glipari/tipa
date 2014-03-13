@@ -100,8 +100,9 @@ TEST_CASE("Null rule", "[parser]")
     }
 }
 
-TEST_CASE("Test the repetition rule followed by a line break: *xx >> yy", "[parser]")
+TEST_CASE("Repetition rule followed by a line break", "[parser]")
 {
+    // cout << "Repetition rule follows by a line break" << endl;
     stringstream str1("abc abc dd");
     stringstream str2("abc abc \n dd");
     parser_context pc1;
@@ -112,8 +113,7 @@ TEST_CASE("Test the repetition rule followed by a line break: *xx >> yy", "[pars
 	CHECK(n1.parse(pc1));
     }
     SECTION("Section 2") {
-	rule n2 = *(keyword("abc")) >> keyword("dd");
-
+	rule n2 = *(keyword("abc")) >> keyword("dd");	
 	pc2.set_stream(str2);
 	CHECK(n2.parse(pc2));
     }

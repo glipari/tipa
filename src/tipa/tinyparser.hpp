@@ -23,6 +23,7 @@ namespace tipa {
    moved around the many rules in the parser
 */
     class parser_context {
+    public:
 	lexer lex;
 	std::vector<token_val> collected;
 	std::stack<unsigned int> ncoll;

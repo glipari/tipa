@@ -101,7 +101,7 @@ namespace tipa {
 	std::string comment_end;
 	std::string comment_single_line;
 
-	void next_line();
+	bool next_line();
 	void skip_spaces();
     public:
     

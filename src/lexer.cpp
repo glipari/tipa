@@ -37,19 +37,28 @@ namespace tipa {
 	comment_single_line = sl;
     }
 
-    void lexer::next_line()
+    bool lexer::next_line()
     {
 	if (nline == all_lines.size()) {
 	    curr_line = "";
+	    if (p_input->eof())
+		return false;
 	    getline(*p_input, curr_line);
 	    all_lines.push_back(curr_line);
-	} else if (nline > all_lines.size()) 
+	} else if (nline > all_lines.size()) { 
 	    throw "Lexer: exceeding all_lines array lenght!";
+	}
+	else {
+	    INFO_LINE("Going ahead again!");
+	    INFO_LINE(curr_line);
+	    INFO_LINE(all_lines[nline]);
+	}
     
 	nline++;
 	curr_line = all_lines[nline-1];
 	ncol = 0;
 	start = curr_line.begin();	
+	return true;
     }
 
 
@@ -110,9 +119,7 @@ namespace tipa {
 	skip_spaces(); 
 
 	while (start == curr_line.end() or *start == 0) {
-	    if (p_input->eof())
-		return { LEX_ERROR, "EOF" };
-	    next_line();
+	    if (not next_line()) return { LEX_ERROR, "EOF" };
 	    skip_spaces();
 	}
 
