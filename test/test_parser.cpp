@@ -53,7 +53,6 @@ TEST_CASE("Recursive rule")
 }
 
 
-
 TEST_CASE("Simpler sintax", "[parser]")
 {
     lexer lex;
@@ -76,4 +75,27 @@ TEST_CASE("Simpler sintax", "[parser]")
 	REQUIRE(expr.parse(pc));
     }
     
+}
+
+
+TEST_CASE("Null rule", "[parser]")
+{
+    stringstream str1("abc 12");
+    stringstream str2("12");
+    parser_context pc;
+    SECTION("The null rule itself") {
+	pc.set_stream(str1);
+	rule n = null();
+	CHECK(n.parse(pc));
+    }
+    SECTION("The 0/1 rule") {
+	rule opt = - rule("abc");
+	rule num = rule(tk_int);
+	rule expr = opt >> num;
+	pc.set_stream(str1);
+	CHECK(expr.parse(pc));
+
+	pc.set_stream(str2);
+	CHECK(expr.parse(pc));
+    }
 }

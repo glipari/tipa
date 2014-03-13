@@ -18,7 +18,6 @@ namespace tipa {
 	parse_exc();
     };
 
-
 /* 
    It contains the lexer and the last token that has been read, it is
    moved around the many rules in the parser
@@ -94,7 +93,6 @@ namespace tipa {
 	/// Sets an action for this rule
 	rule& operator[](action_t af); 
 
-
 	/// internal use only!!
 	explicit rule(std::shared_ptr<impl_rule> ir);
 	std::shared_ptr<impl_rule> get_pimpl() { return pimpl; }
@@ -112,6 +110,9 @@ namespace tipa {
 /** Repetion of rules */
     rule operator*(rule a);
 
+    rule operator-(rule a);
+
+
 /** Extracting part of the text */
     rule extract_rule(const std::string &op, const std::string &cl);
     rule extract_rule(const std::string &opcl);
@@ -119,6 +120,9 @@ namespace tipa {
 
 /** Matches a given keyword */
     rule keyword(const std::string &key, bool collect = true);
+
+    /** this reates a null rule (a rule that is always true) */
+    rule null(); 
 }
 
 #endif

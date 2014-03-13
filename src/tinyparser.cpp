@@ -339,6 +339,20 @@ namespace tipa {
 	return rule(s);
     }
 
+/** Null rule */
+
+    class null_rule : public abs_rule {
+    public:
+	null_rule() {}
+	virtual bool parse(parser_context &pc);
+    };
+
+    
+    bool null_rule::parse(parser_context &pc)
+    {
+	return true;
+    }
+
 /* ------------------------------------------- */
 
 /*
@@ -498,6 +512,19 @@ namespace tipa {
     rule operator>(rule a, rule b)
     {
 	auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
+	return rule(s);
+    }
+
+    rule null()
+    {
+	auto s = std::make_shared<impl_rule>(new null_rule);
+	return rule(s);
+    }
+
+
+    rule operator-(rule a)
+    {
+	auto s = std::make_shared<impl_rule>(new alt_rule(a, null()));
 	return rule(s);
     }
 }
