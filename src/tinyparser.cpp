@@ -1,4 +1,4 @@
-//#define __LOG__ 1
+#define __LOG__ 1
 #include "log_macros.hpp"
 #include "tipa/tinyparser.hpp"
 
@@ -6,8 +6,6 @@
 
 namespace tipa {
 
-    parse_exc::parse_exc() 
-    {}
 
     parser_context::parser_context() : lex{}
     {}
@@ -241,8 +239,9 @@ namespace tipa {
 
     bool term_rule::parse(parser_context &pc)
     {
-	INFO("term_rule::parse() trying " << mytoken.get_expr());
+	INFO_LINE("term_rule::parse() trying " << mytoken.get_expr());
 	token_val result = pc.try_token(mytoken);
+	INFO_LINE("term_rule::parse() completed on " << result.first);
 	if (result.first == mytoken.get_name()) {
 	    INFO_LINE(" ** ok");
 	    if (collect) pc.push_token(result);
@@ -499,9 +498,8 @@ namespace tipa {
 	    if (!x->parse(pc)) {
 		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
 		INFO_LINE(" ** FALSE ");
-		//pc.restore();
-		if (i==0) return false; 
-		else throw parse_exc{};
+		if (i==0) return false;
+		else throw parse_exc("Error in strict sequence (after first)");
 	    }
 	    i++;
 	}    

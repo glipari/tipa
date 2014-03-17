@@ -13,6 +13,15 @@ typedef int token_id;
 
 namespace tipa {
 
+    class parse_exc : public std::exception {
+	std::string msg;
+    public:
+	parse_exc();
+	parse_exc(const std::string &err_msg); 
+	std::string what();
+    };
+
+
 /** 
     This class is a simple pair that represent a token for the Lexer.
     A token is a pair token-name, regular expression that identifies
@@ -125,7 +134,7 @@ namespace tipa {
 	void set_stream(std::istream &in);
 
 	/// checks if the token is found, and returns it, or an error
-	std::pair<token_id, std::string> try_token(const token &x);
+	token_val try_token(const token &x);
 
 	/// returns the current position (line num, column num)
 	std::pair<int, int> get_pos() const { return {nline, ncol}; }

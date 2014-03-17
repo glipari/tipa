@@ -178,7 +178,7 @@ TEST_CASE( "Extraction complex", "[lexer]" ) {
 	REQUIRE( r.first == LEX_OP_PAR );
 	REQUIRE( r.second == "/*" );
 	std::string s;
-	REQUIRE_THROWS_AS(s = lex.extract("/*", "*/"), const char *);
+	REQUIRE_THROWS_AS(s = lex.extract("/*", "*/"), parse_exc& );
     }
 }
 

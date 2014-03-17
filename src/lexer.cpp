@@ -1,4 +1,4 @@
-//#define __LOG__ 1
+#define __LOG__ 1
 #include <iomanip>
 #include "log_macros.hpp"
 
@@ -8,6 +8,16 @@
 using namespace std;
 
 namespace tipa {
+    parse_exc::parse_exc() 
+    {}
+    parse_exc::parse_exc(const string &err_msg) : msg(err_msg)
+    {} 
+
+    string parse_exc::what() 
+    {
+	return msg;
+    }
+
     lexer::lexer() 
     {
     }
@@ -39,16 +49,17 @@ namespace tipa {
 
     bool lexer::next_line()
     {
+	INFO_LINE("Next line");
 	if (nline == all_lines.size()) {
-	    curr_line = "";
-	    if (p_input->eof())
+	    if (p_input->eof()) {
+		INFO_LINE("No more lines to process");
 		return false;
+	    }
 	    getline(*p_input, curr_line);
 	    all_lines.push_back(curr_line);
 	} else if (nline > all_lines.size()) { 
-	    throw "Lexer: exceeding all_lines array lenght!";
-	}
-	else {
+	    throw parse_exc("Lexer: exceeding all_lines array lenght!");
+	} else {
 	    INFO_LINE("Going ahead again!");
 	    INFO_LINE(curr_line);
 	    INFO_LINE(all_lines[nline]);
@@ -113,7 +124,7 @@ namespace tipa {
     }
 
 
-    std::pair<token_id, std::string> lexer::try_token(const token &x)
+    token_val lexer::try_token(const token &x)
     {
 	static boost::match_results<std::string::iterator> what;
 	skip_spaces(); 
@@ -123,7 +134,7 @@ namespace tipa {
 	    skip_spaces();
 	}
 
-	INFO_LINE("try_token(): start is at \"" << *start << "\"");
+	INFO_LINE("try_token(): start is at <" << *start << ">");
 
 	INFO_LINE(curr_line);
 	INFO_LINE(std::setw(ncol) << "^");
@@ -131,13 +142,16 @@ namespace tipa {
 	boost::regex expr(x.get_expr());
 	auto flag = boost::regex_search(start, curr_line.end(), what, expr, 
 					boost::match_continuous);
+
+	INFO_LINE("Regex_search completed");
 	if (flag) {
 	    string res;
 	    copy(start, what[0].second, back_inserter(res));
 	    ncol += distance(start, what[0].second);
 	    start = what[0].second;
-	    return {x.get_name(), res};
+	    return token_val(x.get_name(), res);
 	}
+	INFO_LINE("Token does not match");
 	return { LEX_ERROR, "Token does not match" };
     }
 
@@ -148,9 +162,7 @@ namespace tipa {
 	skip_spaces(); 
 
 	while (start == curr_line.end() or *start == 0) {
-	    if (p_input->eof())
-		return { LEX_ERROR, "EOF" };
-	    next_line();
+	    if (not next_line()) return { LEX_ERROR, "EOF" };
 	    skip_spaces();
 	}
 
@@ -191,9 +203,9 @@ namespace tipa {
 
 	for (;;) {
 	    while (start == curr_line.end()) {
-		if (p_input->eof()) 
-		    throw "END OF INPUT WHILE EXTRACTING";
-		next_line();
+		if (not next_line()) 
+		    throw parse_exc("END OF INPUT WHILE EXTRACTING");
+		//return result;
 		result += "\n";
 	    }
 	    std::string s1(start, start + sym_begin.size() );

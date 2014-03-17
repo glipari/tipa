@@ -11,12 +11,7 @@
 #define ERR_PARSE_ALT   -101
 
 namespace tipa {
-    class err_descriptor;
-
-    class parse_exc : public std::exception {
-    public:
-	parse_exc();
-    };
+    // TODO class err_descriptor;
 
 /* 
    It contains the lexer and the last token that has been read, it is
