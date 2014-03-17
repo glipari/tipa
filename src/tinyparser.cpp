@@ -1,4 +1,4 @@
-#define __LOG__ 1
+//#define __LOG__ 1
 #include "log_macros.hpp"
 #include "tipa/tinyparser.hpp"
 
