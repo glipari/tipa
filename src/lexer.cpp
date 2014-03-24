@@ -13,6 +13,9 @@ namespace tipa {
     parse_exc::parse_exc(const string &err_msg) : msg(err_msg)
     {} 
 
+    parse_exc::~parse_exc() throw()
+    {} 
+
     string parse_exc::what() 
     {
 	return msg;

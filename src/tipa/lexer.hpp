@@ -19,6 +19,7 @@ namespace tipa {
 	parse_exc();
 	parse_exc(const std::string &err_msg); 
 	std::string what();
+	~parse_exc() throw();
     };
 
 

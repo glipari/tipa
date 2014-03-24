@@ -20,8 +20,8 @@ Author: Giuseppe Lipari (giulipari@gmail.com)
   hate the fact that, every time I try to use it, I lose so much time
   in debugging.
 
-  Therefore, I decided to write a very simple library as replacement
-  for Spirit. I tried to keep the same "spirit" and use a simple
+  Therefore, I decided to write a very simple library as a replacement
+  for Spirit. I tried to keep the same /spirit/ and use a simple
   technique to write the rules in a simil-BNF style. However, the
   enphasis is in simplicity of use, therefore I kept the set of
   features to a minimal level, and most importantly, I did not try to
@@ -32,13 +32,26 @@ Author: Giuseppe Lipari (giulipari@gmail.com)
   try!
 
   It requires the Boost::regex library, and uses the C++11 syntax, so
-  make sure to use an upo-to-date compiler.
+  make sure to use an up-to-date compiler. In particular, I am
+  currently working with the following compiler:
+
+    g++ (Ubuntu/Linaro 4.8.1-10ubuntu9) 4.8.1
+
+  Therefore, I cannot guarantee the library will compile on any other
+  system, sorry. If you have troubles compiling with your own
+  compiler, drop me an e-mail and I will see what I can do.
 
   - To compile and install, just go trough the usual 
     
     ./configure && make && make install
 
-  - You can run the tests with in ./test/test
+  - You can run the tests with 
+
+    make check
+
+    or simply by running the test program:
+
+    ./test/test
 
   - Two examples are available in example/arithmetic and
     example/tinyjson
