@@ -36,10 +36,15 @@ namespace tipa {
 
     void lexer::set_stream(istream &in)
     {
+	// curr_line = "";
+	// start = begin(curr_line);
+	all_lines.clear();
+	while (!saved_ctx.empty()) saved_ctx.pop();
+
 	p_input = &in;
 	nline = 0;
 	ncol = 0;
-
+	
 	next_line();
     }
 
