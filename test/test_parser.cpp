@@ -78,17 +78,28 @@ TEST_CASE("Simpler sintax", "[parser]")
 }
 
 
+void myfunction(parser_context &pc)
+{
+    cout << "---- Parsed tokens: " << endl;
+    auto v = pc.collect_tokens();
+    for (auto x : v) {
+	cout << x.second << ", "; 
+    }
+    cout << endl;
+}
+
+
 TEST_CASE("Null rule", "[parser]")
 {
     stringstream str1("abc 12");
     stringstream str2("12");
     parser_context pc;
-    SECTION("The null rule itself") {
+    SECTION("null rule itself") {
 	pc.set_stream(str1);
 	rule n = null();
 	CHECK(n.parse(pc));
     }
-    SECTION("The 0/1 rule") {
+    SECTION("0/1 rule") {
 	rule opt = - rule("abc");
 	rule num = rule(tk_int);
 	rule expr = opt >> num;
@@ -97,6 +108,49 @@ TEST_CASE("Null rule", "[parser]")
 
 	pc.set_stream(str2);
 	CHECK(expr.parse(pc));
+    }
+    SECTION("0/1 rule in the middle") {
+	stringstream str1("{ 12 }");
+	stringstream str2("{ }");
+	
+	rule final = rule('{') >> -rule(tk_int) >> rule('}');
+
+	pc.set_stream(str1);
+	CHECK(final.parse(pc));
+	pc.set_stream(str2);
+	CHECK(final.parse(pc));
+    }
+    SECTION("0/1 rule with composed rules") {
+	stringstream str1("pippo { 12 } pluto");
+
+	rule number = rule('{') > rule(tk_int) > rule('}');
+	rule expr = keyword("pippo") >> -number >> keyword("pluto");
+	number[myfunction];
+
+	pc.set_stream(str1);
+	CHECK(expr.parse(pc));
+    }
+    SECTION("0/1 rule with composed rules again") {
+	stringstream str2("pippo pluto");
+
+	rule number = rule('{') > rule(tk_int) > rule('}');
+	rule expr = keyword("pippo") >> -number >> keyword("pluto");
+	number[myfunction];
+
+	pc.set_stream(str2);
+	CHECK(expr.parse(pc));
+    }
+    SECTION("0/1 failing") {
+	stringstream str3("pippo { } pluto");
+
+	rule number = rule('{') >> rule(tk_int) >> rule('}');
+	rule expr = keyword("pippo") >> -number >> keyword("pluto");
+	number[myfunction];
+
+	cout << "Now the failing one " << endl;
+	// this should fail!
+	pc.set_stream(str3);
+	CHECK(!expr.parse(pc));
     }
 }
 

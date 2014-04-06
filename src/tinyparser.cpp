@@ -13,6 +13,8 @@ namespace tipa {
     void parser_context::set_stream(std::istream &in)
     {
 	lex.set_stream(in);
+	collected.clear();
+	while (!ncoll.empty()) ncoll.pop();
     }
 
     void parser_context::set_comment(const std::string &comment_begin, 
@@ -234,8 +236,6 @@ namespace tipa {
 	INFO_LINE("Action installed");
 	return *this;
     }
-
-
 
     bool term_rule::parse(parser_context &pc)
     {
