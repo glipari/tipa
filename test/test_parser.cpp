@@ -109,6 +109,7 @@ TEST_CASE("Null rule", "[parser]")
 	pc.set_stream(str2);
 	CHECK(expr.parse(pc));
     }
+
     SECTION("0/1 rule in the middle") {
 	stringstream str1("{ 12 }");
 	stringstream str2("{ }");
@@ -120,6 +121,7 @@ TEST_CASE("Null rule", "[parser]")
 	pc.set_stream(str2);
 	CHECK(final.parse(pc));
     }
+
     SECTION("0/1 rule with composed rules") {
 	stringstream str1("pippo { 12 } pluto");
 
@@ -132,18 +134,20 @@ TEST_CASE("Null rule", "[parser]")
 	CHECK(expr.parse(pc));
 	cout << "------------------" << endl;
     }
+
     SECTION("0/1 rule with composed rules again") {
 	stringstream str2("pippo pluto");
 	stringstream str3("pippo { } pluto");
 
-	rule number = rule('{') > rule(tk_int) > rule('}');
+	rule number = rule('{') >> rule(tk_int) > rule('}');
 	rule expr = keyword("pippo") >> -number >> keyword("pluto");
-	number[myfunction];
+	number [myfunction];
 
 	cout << "second" << endl;
 	pc.set_stream(str2);
 	CHECK(expr.parse(pc));
 	cout << "------------------" << endl;
+
 	cout << "Now the failing one " << endl;
 	// this should fail!
 	pc.set_stream(str3);
@@ -154,6 +158,7 @@ TEST_CASE("Null rule", "[parser]")
 	    throw;
 	}
     }
+
     SECTION("0/1 failing") {
 	stringstream str3("pippo { } pluto");
 
