@@ -104,9 +104,49 @@ namespace tipa {
 
 /* ----------------------------------------------- */
 
-/** 
-    The abstract class
-*/
+    /* Here we describe the design of the implementation. 
+       
+       We have two levels of classes/objects for implementing the rule
+       class.  
+
+       1) struct impl_rule: the rule class contains a pointer to this
+       structure. This is not polymorphic. It contains a shared pointer to an abs_rule.
+
+       2) A polymorphic family of classes, with root in abs_rule. 
+       These classes contain the actual parsing code for the different rules. 
+       A abs_rule class can be:
+         - a term-rule: this represents a leaf in the tree, and the parsing is done by the lexer
+	 - a seq_rule: contains a vector of shared pointers to struct impl_rule  
+	 - a alt_rule: contains a vector of shared pointers to struct impl_rule
+	 - a repl-rule: contains one shared pointer to a struct impl_rule
+
+      therefore:
+
+      rule --> impl_rule --> abs_rule        
+
+      (all --> arrows are shared pointers).
+
+      One example of recursive rule like 
+         rule sum;
+         rule expr = sum | null_rule();
+         sum = rule(tk_int) >> rule('+') >> expr ; 
+
+      In this case we have
+
+      expr --> impl_rule(expr) --> alt_rule --> null_rule
+                      ^              |
+                      |              v
+                      |             impl_rule(sum) --> seq_rule --> term_rule(tk_int)
+                      |                                  | 
+                      |                                  v
+                      +------------------------------- seq_rule --> term_rule('+')
+                                                         
+
+       
+
+    /** 
+       The abstract class for the implementation.
+    */
     class abs_rule {
     protected:
 	action_t fun;
@@ -134,10 +174,9 @@ namespace tipa {
 	return true;
     }
 
-/**
-   The actual implementation. 
-   It contains a pointer to the actual implementation. 
-*/
+    /** The implementation structure.  It contains a pointer to the
+     *  REAL implementation.
+    */
     struct impl_rule {
 	std::shared_ptr<abs_rule> abs_impl;
 
@@ -220,6 +259,7 @@ namespace tipa {
 
     rule & rule::operator=(const rule &r) 
     {
+	// TODO: modify this and look for cycles! 
 	pimpl->abs_impl = r.pimpl->abs_impl;
 	return *this;
     }

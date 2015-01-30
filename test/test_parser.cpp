@@ -94,13 +94,15 @@ TEST_CASE("Null rule", "[parser]")
     stringstream str1("abc 12");
     stringstream str2("12");
     parser_context pc;
+
     SECTION("null rule itself") {
 	pc.set_stream(str1);
 	rule n = null();
 	CHECK(n.parse(pc));
     }
+
     SECTION("0/1 rule") {
-	rule opt = - rule("abc");
+	rule opt = -rule("abc");
 	rule num = rule(tk_int);
 	rule expr = opt >> num;
 	pc.set_stream(str1);
@@ -152,7 +154,7 @@ TEST_CASE("Null rule", "[parser]")
 	// this should fail!
 	pc.set_stream(str3);
 	try {
-	    expr.parse(pc);
+	    CHECK(!expr.parse(pc));
 	} catch (std::exception &e) {
 	    cout << "Exception: " << e.what() << endl;
 	    throw;

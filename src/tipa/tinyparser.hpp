@@ -11,12 +11,13 @@
 #define ERR_PARSE_ALT   -101
 
 namespace tipa {
-    // TODO class err_descriptor;
 
-/* 
-   It contains the lexer and the last token that has been read, it is
-   moved around the many rules in the parser
-*/
+    /** It contains the lexer and the last token that has been read,
+     * that is the parser state during parsing. An object of this
+     * class must be created by the user and passed to the parse()
+     * method of the root rule. It is then passed around the rule tree
+     * structure.
+     */
     class parser_context {
     public:
 	lexer lex;
@@ -54,27 +55,28 @@ namespace tipa {
 	std::vector<token_val> collect_tokens();
     };
 
-/// implementation dependent
+    /// implementation dependent
     struct impl_rule;
 
-/// The action function which is passed the parser context
+    /// The action function which is passed the parser context
     typedef std::function< void(parser_context &)> action_t;
 
-/** The concrete rule class */
+    /** The concrete rule class */
     class rule {
+	/// Implementation 
 	std::shared_ptr<impl_rule> pimpl;    
     public:
 	/// An empty rule
 	rule();
-	/// A copy constructor
+	/// Copy constructor
 	rule(const rule &r); 
 
 	/// A rule that matches a simple character
-	/// By default, this rule will NOT collect the character
+	/// By default, this rule will NOT collect the character, unless the second parameter is set to true
 	explicit rule(char c, bool collect = false);
 
 	// A rule that matches a string of characters
-	/// By default, this rule will NOT collect the character
+	/// By default, this rule will NOT collect the character, unless the second parameter is set to true
 	explicit rule(const std::string &s, bool collect = false);
 
 	/// A rule that matches a token
@@ -86,39 +88,54 @@ namespace tipa {
     
 	/// Parses a rule
 	bool parse(parser_context &pc);
+
 	/// Sets an action for this rule
 	rule& operator[](action_t af); 
 
-	/// internal use only!!
+	/// This constructor is not part of the interface, it is for internal use only!!
+	/// (However it must be public to not overcomplicate the implementation)
 	explicit rule(std::shared_ptr<impl_rule> ir);
 	std::shared_ptr<impl_rule> get_pimpl() { return pimpl; }
     };
 
-/** Sequence of rules (with backtrack) */
+    /** This creates a null rule (a rule that always matches without
+     * consuming input) */
+    rule null(); 
+
+    /** Sequence of rules (with backtrack) */
     rule operator>>(rule a, rule b);
 
-/** Sequence of rules (no backtrack) */
+    /** Sequence of rules (no backtrack) */
     rule operator>(rule a, rule b);
 
-/** Alternation of rules */
+    /** Alternation of rules */
     rule operator|(rule a, rule b);
 
-/** Repetion of rules */
+    /** Repetion of rules */
     rule operator*(rule a);
 
+    /** Optional rule: this is a shortcut for the alternation of an
+     * empty rule and the rule a */
     rule operator-(rule a);
 
-
-/** Extracting part of the text */
+    /** Extracts (collects) part of the text. The first parameter
+     * represents the string which marks the start of the text
+     * sequence, whereas the second parameters represents the closing
+     * sequence. For example, in this way it is possible to skip
+     * (remove from parsing) c-style comments */
     rule extract_rule(const std::string &op, const std::string &cl);
+   /** Extracts (collects) part of the text. Unlike the previous
+    * function, this one uses the same sequence for opening and
+    * closing.*/
     rule extract_rule(const std::string &opcl);
+
+    /** This extracts from the starting sequence (the initial
+     * parameter) until the end of the line. Useful for C++ styel
+     * comments '//' */
     rule extract_line_rule(const std::string &opcl);
 
-/** Matches a given keyword */
+    /** Matches a given keyword. By default, the keyword is collected. */
     rule keyword(const std::string &key, bool collect = true);
-
-    /** this reates a null rule (a rule that is always true) */
-    rule null(); 
 }
 
 #endif
