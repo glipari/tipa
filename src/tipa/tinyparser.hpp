@@ -71,12 +71,14 @@ namespace tipa {
 	/// Copy constructor
 	rule(const rule &r); 
 
-	/// A rule that matches a simple character
-	/// By default, this rule will NOT collect the character, unless the second parameter is set to true
+	/// A rule that matches a simple character. By default, this
+	/// rule will NOT collect the character, unless the second
+	/// parameter is set to true
 	explicit rule(char c, bool collect = false);
 
-	// A rule that matches a string of characters
-	/// By default, this rule will NOT collect the character, unless the second parameter is set to true
+	/// A rule that matches a string of characters.  / By default,
+	/// this rule will NOT collect the character, unless the second
+	/// parameter is set to true
 	explicit rule(const std::string &s, bool collect = false);
 
 	/// A rule that matches a token
@@ -92,10 +94,14 @@ namespace tipa {
 	/// Sets an action for this rule
 	rule& operator[](action_t af); 
 
-	/// This constructor is not part of the interface, it is for internal use only!!
-	/// (However it must be public to not overcomplicate the implementation)
+	/// This constructor is not part of the interface, it is for
+	/// internal use only!!  (However it must be public to not
+	/// overcomplicate the implementation)
 	explicit rule(std::shared_ptr<impl_rule> ir);
 	std::shared_ptr<impl_rule> get_pimpl() { return pimpl; }
+
+	// print a representation of the rule structure
+	std::string print();
     };
 
     /** This creates a null rule (a rule that always matches without
@@ -103,13 +109,22 @@ namespace tipa {
     rule null(); 
 
     /** Sequence of rules (with backtrack) */
-    rule operator>>(rule a, rule b);
+    rule operator>>(rule &a, rule &b);
+    rule operator>>(rule &&a, rule &b);
+    rule operator>>(rule &a, rule &&b);
+    rule operator>>(rule &&a, rule &&b);
 
     /** Sequence of rules (no backtrack) */
-    rule operator>(rule a, rule b);
+    rule operator>(rule &a, rule &b);
+    rule operator>(rule &&a, rule &b);
+    rule operator>(rule &a, rule &&b);
+    rule operator>(rule &&a, rule &&b);
 
     /** Alternation of rules */
-    rule operator|(rule a, rule b);
+    rule operator|(rule &a, rule &b);
+    rule operator|(rule &&a, rule &b);
+    rule operator|(rule &a, rule &&b);
+    rule operator|(rule &&a, rule &&b);
 
     /** Repetion of rules */
     rule operator*(rule a);

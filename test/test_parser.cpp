@@ -14,6 +14,8 @@ using namespace tipa;
 #define LEX_ADD   2
 #define LEX_SUB   3
 
+extern int abs_counter;
+
 TEST_CASE( "Two terminals, separated by addition symbol", "[parser]")
 {
     stringstream str("12 + 25");
@@ -190,4 +192,11 @@ TEST_CASE("Repetition rule followed by a line break", "[parser]")
 	pc2.set_stream(str2);
 	CHECK(n2.parse(pc2));
     }
+}
+
+
+TEST_CASE("check the counter", "[parser]")
+{
+    cout << "Checking the counter" << endl;
+    REQUIRE(abs_counter == 0);
 }

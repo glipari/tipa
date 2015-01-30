@@ -1,12 +1,20 @@
-//#define __LOG__ 1
+#define __LOG__ 1
 #include "log_macros.hpp"
 #include "tipa/tinyparser.hpp"
 
 #include <sstream>
+#include <set>
+
+#ifdef __LOG__
+int abs_counter=0;
+#define INC_COUNT do { ++abs_counter; } while(0)
+#define DEC_COUNT do { --abs_counter; } while(0)
+#else
+#define INC_COUNT do {} while(0) 
+#define DEC_COUNT do {} while(0) 
+#endif
 
 namespace tipa {
-
-
     parser_context::parser_context() : lex{}
     {}
 
@@ -143,6 +151,11 @@ namespace tipa {
                                                          
 
        
+    */
+
+
+    struct impl_rule;
+    typedef std::set<impl_rule *> av_set;
 
     /** 
        The abstract class for the implementation.
@@ -151,10 +164,11 @@ namespace tipa {
     protected:
 	action_t fun;
     public:
-	abs_rule() : fun(nullptr) {}
+	abs_rule() : fun(nullptr) { INC_COUNT; }
 	virtual bool parse(parser_context &pc) = 0;
 	bool action(parser_context &pc);
-	virtual ~abs_rule() {}
+	virtual ~abs_rule() { DEC_COUNT; }
+	virtual std::string print(av_set &already_visited) {return std::string("");}
 
 	void install_action(action_t);
     };
@@ -208,6 +222,9 @@ namespace tipa {
     public:
 	term_rule(const token &tk, bool c = true) : mytoken(tk), collect(c) {}
 	virtual bool parse(parser_context &pc);
+	std::string print(av_set &av) {
+	    return std::string("TERM: ") + mytoken.get_expr(); 
+	}
     };
 
 /* ----------------------------------------------- */
@@ -224,6 +241,13 @@ namespace tipa {
     rule::rule(std::shared_ptr<impl_rule> ir) : pimpl(ir)
     {
     }
+
+    std::string rule::print()
+    {
+        av_set av;
+	return pimpl->abs_impl->print(av);
+    }
+
 
     static std::string padding(const std::string &p)
     {
@@ -300,16 +324,41 @@ namespace tipa {
    I expect that they match one after the other. 
 */
     class seq_rule : public abs_rule {
+    protected:
 	std::vector< std::shared_ptr<impl_rule> > rl;
+	std::vector< std::weak_ptr<impl_rule> > wl;
     public:
-	seq_rule(rule a, rule b); 
 
+	seq_rule(rule &a, rule &b); 
+	seq_rule(rule &&a, rule &b); 
+	seq_rule(rule &a, rule &&b);
+	seq_rule(rule &&a, rule &&b);
+ 
 	virtual bool parse(parser_context &pc);
+	std::string print(av_set &av);
     };
 
 /* ----------------------------------------------- */
 
-    seq_rule::seq_rule(rule a, rule b)
+    seq_rule::seq_rule(rule &a, rule &b)
+    {
+	wl.push_back(a.get_pimpl());
+	wl.push_back(b.get_pimpl());
+    }
+
+    seq_rule::seq_rule(rule &&a, rule &b)
+    {
+	rl.push_back(a.get_pimpl());
+	wl.push_back(b.get_pimpl());
+    }
+
+    seq_rule::seq_rule(rule &a, rule &&b)
+    {
+	wl.push_back(a.get_pimpl());
+	rl.push_back(b.get_pimpl());
+    }
+
+    seq_rule::seq_rule(rule &&a, rule &&b)
     {
 	rl.push_back(a.get_pimpl());
 	rl.push_back(b.get_pimpl());
@@ -323,19 +372,78 @@ namespace tipa {
 	for (auto &x : rl) {
 	    if (!x->parse(pc)) {
 		// TODO, better error is necessary!
-		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence (STRONG)"});
 		INFO_LINE(" ** FALSE ");
 		pc.restore();
 		return false;
+	    }
+	}    
+
+	for (auto &x : wl) {
+	    if (auto spt = x.lock()) {
+		if (!spt->parse(pc)) {
+		    // TODO, better error is necessary!
+		    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence (WEAK)"});
+		    INFO_LINE(" ** FALSE ");
+		    pc.restore();
+		    return false;
+		}
+	    }
+	    else {
+		throw parse_exc("seq_parse: weak pointer error!");
 	    }
 	}    
 	INFO_LINE(" ** ok ");
 	return true;
     }
 
-    rule operator>>(rule a, rule b)
+    std::string seq_rule::print(av_set &av) 
     {
+	std::string s("(SEQ: ");
+	for (auto &x : rl) {
+	    if (av.find(x.get()) == av.end()) {
+		av.insert(x.get());
+		s += x->abs_impl->print(av) + "(Strong) >> ";
+	    }
+	    else s+= "[visited]";
+	}
+        for (auto &x : wl)
+	    if (auto spt = x.lock()) {
+	        if (av.find(spt.get()) == av.end()) {
+		    av.insert(spt.get());
+		    s += spt->abs_impl->print(av) + "(Weak) >> ";	
+	        }
+		else s+= "[visited]";
+	    }
+	return s + ")\n";
+    }
+
+
+    rule operator>>(rule &a, rule &b)
+    {
+	INFO_LINE("seq operator: &a and &b");
 	auto s = std::make_shared<impl_rule>(new seq_rule(a,b));
+	return rule(s);
+    }
+
+    rule operator>>(rule &&a, rule &b)
+    {
+	INFO_LINE("seq operator: &&a and &b");
+	auto s = std::make_shared<impl_rule>(new seq_rule(std::move(a),b));
+	return rule(s);
+    }
+
+    rule operator>>(rule &a, rule &&b)
+    {
+	INFO_LINE("seq operator: &a and &&b");
+	auto s = std::make_shared<impl_rule>(new seq_rule(a,std::move(b)));
+	return rule(s);
+    }
+
+    rule operator>>(rule &&a, rule &&b)
+    {
+	INFO_LINE("seq operator: &&a and &&b");
+	auto s = std::make_shared<impl_rule>(new seq_rule(std::move(a),std::move(b)));
 	return rule(s);
     }
 
@@ -347,13 +455,36 @@ namespace tipa {
 */
     class alt_rule : public abs_rule {
 	std::vector< std::shared_ptr<impl_rule> > rl;
+	std::vector< std::weak_ptr<impl_rule> > wl;
     public:
-	alt_rule(rule a, rule b);
+	alt_rule(rule &a, rule &b);
+	alt_rule(rule &&a, rule &b);
+	alt_rule(rule &a, rule &&b);
+	alt_rule(rule &&a, rule &&b);
 
 	virtual bool parse(parser_context &pc);
+	virtual std::string print(av_set &av);
     };
 
-    alt_rule::alt_rule(rule a, rule b)
+    alt_rule::alt_rule(rule &a, rule &b)
+    {
+	wl.push_back(a.get_pimpl());
+	wl.push_back(b.get_pimpl());
+    }
+
+    alt_rule::alt_rule(rule &&a, rule &b)
+    {
+	rl.push_back(a.get_pimpl());
+	wl.push_back(b.get_pimpl());
+    }
+
+    alt_rule::alt_rule(rule &a, rule &&b)
+    {
+	wl.push_back(a.get_pimpl());
+	rl.push_back(b.get_pimpl());
+    }
+
+    alt_rule::alt_rule(rule &&a, rule &&b)
     {
 	rl.push_back(a.get_pimpl());
 	rl.push_back(b.get_pimpl());
@@ -367,18 +498,75 @@ namespace tipa {
 		INFO_LINE(" ** ok");
 		return true;
 	    }
+	for (auto &x : wl)
+	    if (auto spt = x.lock()) {
+		if (spt->parse(pc)) {
+		    INFO_LINE(" ** ok");
+		    return true;
+		}
+	    }
+	    else {
+		throw parse_exc("alt_rule: undefined weak pointer");
+	    }
+
 	pc.set_error({ERR_PARSE_ALT, "None of the alternatives parsed correctly"});
 	INFO_LINE(" ** FALSE");
 	return false;
     }
 
-    rule operator|(rule a, rule b)
+
+    std::string alt_rule::print(av_set &av) {
+	std::string s ("(ALT : ");
+	for (auto &x : rl) {
+	    if (av.find(x.get()) == av.end()) {
+		av.insert(x.get());
+		s += x->abs_impl->print(av) + "(strong) | ";
+	    } 
+	    else s+= "[visited]";
+	}
+	for (auto &x : wl) {
+	    if (auto spt = x.lock())  { 
+		if (av.find(spt.get()) == av.end()) {
+		    av.insert(spt.get());
+		    s += spt->abs_impl->print(av) + "(weak) | ";
+		}
+		else s+= "[visited]";
+	    }
+	}
+	return s + ")\n";
+    }
+
+    rule operator|(rule &a, rule &b)
     {
+	INFO_LINE("alt operator: &a and &b");
 	auto s = std::make_shared<impl_rule>(new alt_rule(a,b));
 	return rule(s);
     }
 
-/** Null rule */
+    rule operator|(rule &&a, rule &b)
+    {
+	INFO_LINE("alt operator: &&a and &b");
+	auto s = std::make_shared<impl_rule>(new alt_rule(std::move(a),b));
+	return rule(s);
+    }
+
+    rule operator|(rule &a, rule &&b)
+    {
+	INFO_LINE("alt operator: &a and &&b");
+
+	auto s = std::make_shared<impl_rule>(new alt_rule(a,std::move(b)));
+	return rule(s);
+    }
+
+    rule operator|(rule &&a, rule &&b)
+    {
+	INFO_LINE("alt operator: &&a and &&b");
+
+	auto s = std::make_shared<impl_rule>(new alt_rule(std::move(a),std::move(b)));
+	return rule(s);
+    }
+
+   /** Null rule */
 
     class null_rule : public abs_rule {
     public:
@@ -403,6 +591,7 @@ namespace tipa {
 	rep_rule(rule a);
 
 	virtual bool parse(parser_context &pc);
+	virtual std::string print(av_set &av);
     };
 
     rep_rule::rep_rule(rule a) : rl(a.get_pimpl())
@@ -420,6 +609,18 @@ namespace tipa {
 	return true;	
     }
 
+    std::string rep_rule::print(av_set &av) 
+    {
+	std::string s = "(REP :";
+	if (av.find(rl.get()) == av.end()) {
+	    av.insert(rl.get());
+	    s += rl->abs_impl->print(av) + "(strong) * ";   
+	}
+	else {
+	    s += "[visited]";
+	}
+	return s + ")\n";
+    }
 
     rule operator*(rule a) 
     {
@@ -515,18 +716,31 @@ namespace tipa {
    A sequence of rules to be evaluated in order. 
    I expect that they match one after the other. 
 */
-    class strict_seq_rule : public abs_rule {
-	std::vector< std::shared_ptr<impl_rule> > rl;
+    class strict_seq_rule : public seq_rule {
     public:
-	strict_seq_rule(rule a, rule b);
+
+	strict_seq_rule(rule &a, rule &b);
+	strict_seq_rule(rule &&a, rule &b);
+	strict_seq_rule(rule &a, rule &&b);
+	strict_seq_rule(rule &&a, rule &&b);
 
 	virtual bool parse(parser_context &pc);
     };
 
-    strict_seq_rule::strict_seq_rule(rule a, rule b)
+    strict_seq_rule::strict_seq_rule(rule &a, rule &b) : seq_rule(a, b)
     {
-	rl.push_back(a.get_pimpl());
-	rl.push_back(b.get_pimpl());
+    }
+
+    strict_seq_rule::strict_seq_rule(rule &&a, rule &b) : seq_rule(std::move(a), b)
+    {
+    }
+
+    strict_seq_rule::strict_seq_rule(rule &a, rule &&b) : seq_rule(a, std::move(b))
+    {
+    }
+
+    strict_seq_rule::strict_seq_rule(rule &&a, rule &&b) : seq_rule(std::move(a), std::move(b))
+    {
     }
 
     bool strict_seq_rule::parse(parser_context &pc)
@@ -543,13 +757,49 @@ namespace tipa {
 	    }
 	    i++;
 	}    
+	for (auto &x : wl) {
+	    if (auto spt = x.lock()) {
+		if (!spt->parse(pc)) {
+		    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+		    INFO_LINE(" ** FALSE ");
+		    if (i==0) return false;
+		    else throw parse_exc("Error in strict sequence (after first)");
+		}
+		i++;
+	    }
+	    else {
+		throw parse_exc("strict_seq_rule: unvalid weak pointer");
+	    }
+	}    
+
 	INFO_LINE(" ** ok ");
 	return true;
     }
 
-    rule operator>(rule a, rule b)
+    rule operator>(rule &a, rule &b)
     {
+	INFO_LINE("sseq operator: &a and &b");
+
 	auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
+	return rule(s);
+    }
+    rule operator>(rule &&a, rule &b)
+    {
+	INFO_LINE("sseq operator: &&a and &b");
+	auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),b));
+	return rule(s);
+    }
+    rule operator>(rule &a, rule &&b)
+    {
+	INFO_LINE("sseq operator: &a and &&b");
+
+	auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,std::move(b)));
+	return rule(s);
+    }
+    rule operator>(rule &&a, rule &&b)
+    {
+	INFO_LINE("sseq operator: &&a and &&b");
+	auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),std::move(b)));
 	return rule(s);
     }
 

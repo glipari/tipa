@@ -33,6 +33,8 @@ TEST_CASE( "parsing from file", "[parser]")
 
     prop_list = type >> rule('(') >> name >> rule(')') 
 		     >> rule('{') >> *prop_gen >> rule('}') >> rule(';');
+
+    cout << prop_list.print() << endl;
     
     SECTION("first from string") {
 	stringstream str("sys(mysys) {\n task(t1) {		wcet=4; 		period=20;        };};");
