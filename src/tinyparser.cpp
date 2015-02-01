@@ -1,6 +1,7 @@
-#define __LOG__ 1
+//#define __LOG__ 1
 #include "log_macros.hpp"
 #include "tipa/tinyparser.hpp"
+#include "tipa/wptr.hpp"
 
 #include <sstream>
 #include <set>
@@ -149,11 +150,13 @@ namespace tipa {
                       |                                  v
                       +------------------------------- seq_rule --> term_rule('+')
                                                          
-
        
     */
 
 
+    /** 
+	this is used to implement the print method (used for debugging)
+    */
     struct impl_rule;
     typedef std::set<impl_rule *> av_set;
 
@@ -325,8 +328,7 @@ namespace tipa {
 */
     class seq_rule : public abs_rule {
     protected:
-	std::vector< std::shared_ptr<impl_rule> > rl;
-	std::vector< std::weak_ptr<impl_rule> > wl;
+	std::vector< WPtr<impl_rule> > rl;
     public:
 
 	seq_rule(rule &a, rule &b); 
@@ -342,26 +344,26 @@ namespace tipa {
 
     seq_rule::seq_rule(rule &a, rule &b)
     {
-	wl.push_back(a.get_pimpl());
-	wl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_WEAK));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_WEAK));
     }
 
     seq_rule::seq_rule(rule &&a, rule &b)
     {
-	rl.push_back(a.get_pimpl());
-	wl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_STRONG));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_WEAK));
     }
 
     seq_rule::seq_rule(rule &a, rule &&b)
     {
-	wl.push_back(a.get_pimpl());
-	rl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_WEAK));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
     seq_rule::seq_rule(rule &&a, rule &&b)
     {
-	rl.push_back(a.get_pimpl());
-	rl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_STRONG));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
     bool seq_rule::parse(parser_context &pc)
@@ -370,20 +372,10 @@ namespace tipa {
 
 	pc.save();
 	for (auto &x : rl) {
-	    if (!x->parse(pc)) {
-		// TODO, better error is necessary!
-		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence (STRONG)"});
-		INFO_LINE(" ** FALSE ");
-		pc.restore();
-		return false;
-	    }
-	}    
-
-	for (auto &x : wl) {
-	    if (auto spt = x.lock()) {
+	    if (auto spt = x.get()) {
 		if (!spt->parse(pc)) {
 		    // TODO, better error is necessary!
-		    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence (WEAK)"});
+		    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
 		    INFO_LINE(" ** FALSE ");
 		    pc.restore();
 		    return false;
@@ -400,15 +392,8 @@ namespace tipa {
     std::string seq_rule::print(av_set &av) 
     {
 	std::string s("(SEQ: ");
-	for (auto &x : rl) {
-	    if (av.find(x.get()) == av.end()) {
-		av.insert(x.get());
-		s += x->abs_impl->print(av) + "(Strong) >> ";
-	    }
-	    else s+= "[visited]";
-	}
-        for (auto &x : wl)
-	    if (auto spt = x.lock()) {
+        for (auto &x : rl)
+	    if (auto spt = x.get()) {
 	        if (av.find(spt.get()) == av.end()) {
 		    av.insert(spt.get());
 		    s += spt->abs_impl->print(av) + "(Weak) >> ";	
@@ -454,8 +439,8 @@ namespace tipa {
   must be matched
 */
     class alt_rule : public abs_rule {
-	std::vector< std::shared_ptr<impl_rule> > rl;
-	std::vector< std::weak_ptr<impl_rule> > wl;
+	std::vector< WPtr<impl_rule> > rl;
+	// std::vector< std::weak_ptr<impl_rule> > wl;
     public:
 	alt_rule(rule &a, rule &b);
 	alt_rule(rule &&a, rule &b);
@@ -468,38 +453,33 @@ namespace tipa {
 
     alt_rule::alt_rule(rule &a, rule &b)
     {
-	wl.push_back(a.get_pimpl());
-	wl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_WEAK));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_WEAK));
     }
 
     alt_rule::alt_rule(rule &&a, rule &b)
     {
-	rl.push_back(a.get_pimpl());
-	wl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_STRONG));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_WEAK));
     }
 
     alt_rule::alt_rule(rule &a, rule &&b)
     {
-	wl.push_back(a.get_pimpl());
-	rl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_WEAK));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
     alt_rule::alt_rule(rule &&a, rule &&b)
     {
-	rl.push_back(a.get_pimpl());
-	rl.push_back(b.get_pimpl());
+	rl.push_back(WPtr<impl_rule>(a.get_pimpl(), WPTR_STRONG));
+	rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
     bool alt_rule::parse(parser_context &pc)
     {
 	INFO("alt_rule::parse() | ");
 	for (auto &x : rl)
-	    if (x->parse(pc)) {
-		INFO_LINE(" ** ok");
-		return true;
-	    }
-	for (auto &x : wl)
-	    if (auto spt = x.lock()) {
+	    if (auto spt = x.get()) {
 		if (spt->parse(pc)) {
 		    INFO_LINE(" ** ok");
 		    return true;
@@ -517,22 +497,15 @@ namespace tipa {
 
     std::string alt_rule::print(av_set &av) {
 	std::string s ("(ALT : ");
-	for (auto &x : rl) {
-	    if (av.find(x.get()) == av.end()) {
-		av.insert(x.get());
-		s += x->abs_impl->print(av) + "(strong) | ";
-	    } 
-	    else s+= "[visited]";
-	}
-	for (auto &x : wl) {
-	    if (auto spt = x.lock())  { 
-		if (av.find(spt.get()) == av.end()) {
+
+        for (auto &x : rl)
+	    if (auto spt = x.get()) {
+	        if (av.find(spt.get()) == av.end()) {
 		    av.insert(spt.get());
-		    s += spt->abs_impl->print(av) + "(weak) | ";
-		}
+		    s += spt->abs_impl->print(av) + " >> ";	
+	        }
 		else s+= "[visited]";
 	    }
-	}
 	return s + ")\n";
     }
 
@@ -586,45 +559,61 @@ namespace tipa {
   A repetition of zero or one instances of a rule
 */
     class rep_rule : public abs_rule {
-	std::shared_ptr<impl_rule> rl;
+	WPtr<impl_rule> rl;
     public:
-	rep_rule(rule a);
+	rep_rule(rule &a);
+	rep_rule(rule &&a);
 
 	virtual bool parse(parser_context &pc);
 	virtual std::string print(av_set &av);
     };
 
-    rep_rule::rep_rule(rule a) : rl(a.get_pimpl())
+    rep_rule::rep_rule(rule &a) : rl(WPtr<impl_rule>(a.get_pimpl(), WPTR_WEAK))
+    {
+    }
+
+    rep_rule::rep_rule(rule &&a) : rl(WPtr<impl_rule>(a.get_pimpl(), WPTR_STRONG))
     {
     }
 
     bool rep_rule::parse(parser_context &pc)
     {
 	INFO("rep_rule::parse() | ");
-
-	while (rl->parse(pc)) {
-	    INFO("*");
+	if (rl.get()) {
+	    while (rl.get()->parse(pc)) INFO("*");
+	    INFO(" end ");
 	}
-	INFO(" end ");
+	else {
+	    throw parse_exc("rep_rule: unvalid weak pointer");
+	}
 	return true;	
     }
 
     std::string rep_rule::print(av_set &av) 
     {
 	std::string s = "(REP :";
-	if (av.find(rl.get()) == av.end()) {
-	    av.insert(rl.get());
-	    s += rl->abs_impl->print(av) + "(strong) * ";   
+	if (rl.get()) {
+	    if (av.find(rl.get().get()) == av.end()) {
+		av.insert(rl.get().get());
+		s += rl.get()->abs_impl->print(av) + "(strong) * ";   
+	    }
+	    else {
+		s += "[visited]";
+	    }
 	}
-	else {
-	    s += "[visited]";
-	}
+	else s+=" <unvalid> ";
 	return s + ")\n";
     }
 
-    rule operator*(rule a) 
+    rule operator*(rule &a) 
     {
 	auto s = std::make_shared<impl_rule>(new rep_rule(a));
+	return rule(s);    
+    }
+
+    rule operator*(rule &&a) 
+    {
+	auto s = std::make_shared<impl_rule>(new rep_rule(std::move(a)));
 	return rule(s);    
     }
 
@@ -671,6 +660,7 @@ namespace tipa {
 	keyword_rule(const std::string &key, bool collect) : kw(key), rl(tk_ident, collect) {}
 
 	virtual bool parse(parser_context &pc);
+	virtual std::string print(av_set &av);
     };
 
     bool keyword_rule::parse(parser_context &pc)
@@ -685,6 +675,11 @@ namespace tipa {
 	    pc.restore();
 	    return false;
 	}
+    }
+
+    std::string keyword_rule::print(av_set &av)
+    {
+       return std::string("TERM: ") + kw;
     }
 
 
@@ -749,16 +744,7 @@ namespace tipa {
 
 	int i = 0;
 	for (auto &x : rl) {
-	    if (!x->parse(pc)) {
-		pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
-		INFO_LINE(" ** FALSE ");
-		if (i==0) return false;
-		else throw parse_exc("Error in strict sequence (after first)");
-	    }
-	    i++;
-	}    
-	for (auto &x : wl) {
-	    if (auto spt = x.lock()) {
+	    if (auto spt = x.get()) {
 		if (!spt->parse(pc)) {
 		    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
 		    INFO_LINE(" ** FALSE ");
@@ -810,9 +796,15 @@ namespace tipa {
     }
 
 
-    rule operator-(rule a)
+    rule operator-(rule &a)
     {
 	auto s = std::make_shared<impl_rule>(new alt_rule(a, null()));
+	return rule(s);
+    }
+
+    rule operator-(rule &&a)
+    {
+	auto s = std::make_shared<impl_rule>(new alt_rule(std::move(a), null()));
 	return rule(s);
     }
 }

@@ -14,7 +14,7 @@ using namespace tipa;
 #define LEX_ADD   2
 #define LEX_SUB   3
 
-extern int abs_counter;
+//extern int abs_counter;
 
 TEST_CASE( "Two terminals, separated by addition symbol", "[parser]")
 {
@@ -108,6 +108,8 @@ TEST_CASE("Null rule", "[parser]")
 	rule num = rule(tk_int);
 	rule expr = opt >> num;
 	pc.set_stream(str1);
+        cout << expr.print() << endl;
+
 	CHECK(expr.parse(pc));
 
 	pc.set_stream(str2);
@@ -190,13 +192,50 @@ TEST_CASE("Repetition rule followed by a line break", "[parser]")
     SECTION("Section 2") {
 	rule n2 = *(keyword("abc")) >> keyword("dd");	
 	pc2.set_stream(str2);
-	CHECK(n2.parse(pc2));
+	try {
+	    CHECK(n2.parse(pc2));
+	} catch(parse_exc e) {
+	    cout << e.what() << endl;
+	    throw;
+	}
     }
 }
 
 
-TEST_CASE("check the counter", "[parser]")
+
+SCENARIO("Ownership test", "[parser]")
 {
-    cout << "Checking the counter" << endl;
-    REQUIRE(abs_counter == 0);
+    GIVEN("A rule to build") {
+	rule expr;
+	parser_context c;
+	stringstream str("{}");
+	c.set_stream(str);
+
+	WHEN("It contains another rule defined on the stack") {
+	    { 
+		rule a = rule('{');
+		expr = a >> rule('}'); 
+	    }
+	    THEN("Parsing raises an exception") {
+		CHECK_THROWS_AS(expr.parse(c), parse_exc);
+	    }
+	}
+	WHEN("It contains a rule defined on the fly") {
+	    {
+		expr = rule('{') >> rule('}');
+	    }
+	    THEN("No exception is thrown") {
+		CHECK_NOTHROW(expr.parse(c));
+	    }
+	}
+	WHEN("The static rule passes the ownership") {
+	    { 
+		rule a = rule('{');
+		expr = std::move(a) >> rule('}'); 
+	    }
+	    THEN ("No exception is thrown") {
+		CHECK_NOTHROW(expr.parse(c));
+	    }
+	}
+    }
 }

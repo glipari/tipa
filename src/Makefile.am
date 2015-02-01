@@ -6,4 +6,4 @@ libtinyparser_@TIPA_API_VERSION@_la_LDFLAGS  = $(BOOST_REGEX_LDFLAGS) -version-i
 LIBS        = $(BOOST_REGEX_LIBS)
 
 tipa_includedir = $(includedir)/tipa-$(TIPA_API_VERSION)
-nobase_tipa_include_HEADERS = tipa/lexer.hpp tipa/tinyparser.hpp
+nobase_tipa_include_HEADERS = tipa/lexer.hpp tipa/tinyparser.hpp tipa/wptr.hpp

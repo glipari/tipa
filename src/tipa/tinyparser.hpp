@@ -127,11 +127,13 @@ namespace tipa {
     rule operator|(rule &&a, rule &&b);
 
     /** Repetion of rules */
-    rule operator*(rule a);
+    rule operator*(rule &a);
+    rule operator*(rule &&a);
 
     /** Optional rule: this is a shortcut for the alternation of an
      * empty rule and the rule a */
-    rule operator-(rule a);
+    rule operator-(rule &a);
+    rule operator-(rule &&a);
 
     /** Extracts (collects) part of the text. The first parameter
      * represents the string which marks the start of the text

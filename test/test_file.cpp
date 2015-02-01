@@ -19,7 +19,7 @@ using namespace tipa;
 #define LEX_PIPELINE 7
 
 
-TEST_CASE( "parsing from file", "[parser]")
+TEST_CASE( "File parsing", "[parser]")
 {
     ifstream file("struct.txt");
     if (!file.is_open()) FAIL("File struct.txt not found");
@@ -34,9 +34,9 @@ TEST_CASE( "parsing from file", "[parser]")
     prop_list = type >> rule('(') >> name >> rule(')') 
 		     >> rule('{') >> *prop_gen >> rule('}') >> rule(';');
 
-    cout << prop_list.print() << endl;
+    //cout << prop_list.print() << endl;
     
-    SECTION("first from string") {
+    SECTION("File first from string") {
 	stringstream str("sys(mysys) {\n task(t1) {		wcet=4; 		period=20;        };};");
 	
 	parser_context pc;
@@ -48,7 +48,7 @@ TEST_CASE( "parsing from file", "[parser]")
 	}
     }
 
-    SECTION("then from file") {
+    SECTION("File then from file") {
     	parser_context pc;
     	pc.set_stream(file);	
 	try {
