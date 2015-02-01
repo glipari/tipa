@@ -118,16 +118,17 @@ namespace tipa {
        We have two levels of classes/objects for implementing the rule
        class.  
 
-       1) struct impl_rule: the rule class contains a pointer to this
-       structure. This is not polymorphic. It contains a shared pointer to an abs_rule.
+       1) struct impl_rule: the rule class contains a shared pointer to this
+       structure. This class is not polymorphic. It contains a shared
+       pointer to an abs_rule.
 
        2) A polymorphic family of classes, with root in abs_rule. 
        These classes contain the actual parsing code for the different rules. 
        A abs_rule class can be:
          - a term-rule: this represents a leaf in the tree, and the parsing is done by the lexer
-	 - a seq_rule: contains a vector of shared pointers to struct impl_rule  
-	 - a alt_rule: contains a vector of shared pointers to struct impl_rule
-	 - a repl-rule: contains one shared pointer to a struct impl_rule
+	 - a seq_rule: contains a vector of pointers to struct impl_rule  
+	 - a alt_rule: contains a vector of pointers to struct impl_rule
+	 - a rep_rule: contains one shared pointer to a struct impl_rule
 
       therefore:
 
@@ -135,7 +136,7 @@ namespace tipa {
 
       (all --> arrows are shared pointers).
 
-      One example of recursive rule like 
+      One example of recursive rule: 
          rule sum;
          rule expr = sum | null_rule();
          sum = rule(tk_int) >> rule('+') >> expr ; 
@@ -148,9 +149,29 @@ namespace tipa {
                       |             impl_rule(sum) --> seq_rule --> term_rule(tk_int)
                       |                                  | 
                       |                                  v
+		      |                                impl_rule
+		      |                                  |
+		      |                                  v
                       +------------------------------- seq_rule --> term_rule('+')
                                                          
        
+       Notice that there is a cycle. If all pointers are shared_prt,
+       we run into a memory leak when we destroy expr.  So, the
+       strategy is the following: 
+
+       - if a rule is created from a rvalue (for example, by rules
+         built on the fly), then it takes ownership of the impl_rule
+         by using a shared_ptr;
+      
+       - if a rule is created from a lvalue (for example, by rules
+         built on the stack, like rule sum in the example above), then
+         it uses a weak_ptr and does not take ownership.
+
+       So, be careful when building a rule from other rules; make sure
+       that they stay alive after construction; if you want to force
+       ownership (because you know you are going to destroy the rule)
+       use std::move() to transform a lvalue into a rvalue and force
+       the rule to use a shared_ptr.
     */
 
 

@@ -63,3 +63,94 @@ Author: Giuseppe Lipari (giulipari@gmail.com)
   To be done...
 
 
+* NOTICE on the memory strategy
+
+  The rule class implementation internally uses either shared_ptr or
+  weak_ptr pointers for holding references to other rules. It works as
+  follows:
+
+  - If a rule consists of two rules created on the fly (as C++
+    rvalues), then it uses shared_ptr to hold ownership on these
+    rules. For example:
+
+    ```c++
+    rule r = rule('a') >> rule('b');
+    ```
+
+    In this case, rule('a') and rule('b') are rvalues in the
+    expression on the right of the assigment, therefore, another temp
+    object is built that holds the ownership of these two, and then
+    this is assigned to rule r. In the end, r has ownership of the
+    other two rules. Here is a graphical representation
+
+    ```
+    +---+                      +-----------+
+    | r | --- shared_ptr --->  | rule('a') |
+    +---+                      +-----------+
+      |
+      |                        +-----------+
+      +------ shared_ptr --->  | rule('b') |
+                               +-----------+
+    ```
+
+    Consider this second example:
+
+    ```c++
+    rule a = rule('a');
+    rule r = a >> rule('b');
+    ```
+
+    In this case, the sequence expression on the right refers to a
+    lvalue object (rule a) and a rvalue; therefore, for the first one
+    we use a weak_ptr, NOT taking ownership, whereas for the second we
+    use a shared_ptr, and we do take ownership. Here is the structure:
+
+    ```
+    +---+                     
+    | a | --- shared_ptr ----------+
+    +---+                          |
+                                   v
+    +---+                      +-----------+
+    | r | --- weak_ptr ----->  | rule('a') |
+    +---+                      +-----------+
+      |
+      |                        +-----------+
+      +------ shared_ptr --->  | rule('b') |
+                               +-----------+
+    ```
+
+    Please, notice that if a goes out of scope before r, then the
+    memory for rule('a') is freed, and you get an exception when
+    parsing r.
+
+    If you know what you are doing, and you want to release a before
+    r, you can transform the lvalue into a rvalue by using
+    std::move(). Here is the example;
+
+    ```c++
+    rule r;
+    {
+        rule a = rule('a');
+        rule r = std::move(a) >> rule('b');    
+	// *1*
+    } 
+    // *2*
+    ```
+
+    In this case, the structure at point *1* is the following:
+    
+    ```c++
+    +---+                     
+    | a | --- shared_ptr ----------+
+    +---+                          |
+                                   v
+    +---+                      +-----------+
+    | r | --- shared_ptr --->  | rule('a') |
+    +---+                      +-----------+
+      |
+      |                        +-----------+
+      +------ shared_ptr --->  | rule('b') |
+                               +-----------+
+    ```
+
+    and at point *2* it becomes the same as in the first case. 
