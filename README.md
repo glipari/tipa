@@ -106,7 +106,7 @@ follows:
 
 -   If you know what you are doing, and you want to release a before
     r, you can transform the lvalue into a rvalue by using
-    s=td::move()=. Here is the example;
+    =std::move()=. Here is the example;
     
         rule r;
         {
