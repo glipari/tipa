@@ -4,7 +4,7 @@
 #include <sstream>
 #include <memory>
 
-#include <tipa/tinyparser.hpp>
+#include <tinyparser.hpp>
 
 using namespace std;
 using namespace tipa;
@@ -26,10 +26,10 @@ protected:
     shared_ptr<tree_node> right;
 public:
     void set_left(shared_ptr<tree_node> l) {
-	left = l;
+        left = l; 
     }
     void set_right(shared_ptr<tree_node> r) {
-	right = r;
+        right = r;
     }
 };
 
@@ -51,9 +51,9 @@ public:
     class xxx##_node : public op_node {  \
     public:                              \
       virtual int compute() {            \
-	int l = left->compute();         \
-	int r = right->compute();        \
-	return l sym r;                  \
+          int l = left->compute();       \
+          int r = right->compute();      \
+          return l sym r;                \
       }                                  \
     }
 
@@ -66,36 +66,36 @@ class builder {
     stack< shared_ptr<tree_node> > st;
 public:
     void make_leaf(parser_context &pc) {
-	auto x = pc.collect_tokens();
+        auto x = pc.collect_tokens();
         if (x.size() < 1) throw string("Error in collecting integer");
-	int v = atoi(x[x.size()-1].second.c_str());
-	auto node = make_shared<leaf_node>(v);
-	st.push(node);
+        int v = atoi(x[x.size()-1].second.c_str());
+        auto node = make_shared<leaf_node>(v);
+        st.push(node);
     } 
 
     template<class T>
     void make_op(parser_context &pc) {
-	auto r = st.top(); st.pop();
-	auto l = st.top(); st.pop();
-	auto n = make_shared<T>();
-	n->set_left(l);
-	n->set_right(r);
-	st.push(n);
+        auto r = st.top(); st.pop();
+        auto l = st.top(); st.pop();
+        auto n = make_shared<T>();
+        n->set_left(l);
+        n->set_right(r);
+        st.push(n);
     }
     
     
     void make_var(parser_context &pc) {
-	auto x = pc.collect_tokens();
-	if (x.size() < 1) throw string("Error in collecting variable");
-	string v = x[x.size() - 1].second;
-	auto node = make_shared<var_node>(v);
-	st.push(node);
+        auto x = pc.collect_tokens();
+        if (x.size() < 1) throw string("Error in collecting variable");
+        string v = x[x.size() - 1].second;
+        auto node = make_shared<var_node>(v);
+        st.push(node);
     }
 
     int get_size() { return st.size(); }
 
     shared_ptr<tree_node> get_tree() {
-	return st.top();
+        return st.top();
     }
 };
 
@@ -103,7 +103,7 @@ int main()
 {
     // These are the parsing rules
     rule expr, primary, term, 
-	op_plus, op_minus, op_mult, op_div, r_int, r_var;
+        op_plus, op_minus, op_mult, op_div, r_int, r_var;
     
     // An expression is sequence of terms separated by + or -
     expr = term >> *(op_plus | op_minus);
@@ -117,7 +117,7 @@ int main()
 
     // A primary is either an integer or an expression within parenthesis
     primary = r_int | r_var |
-	rule('(') >> expr >> rule(')');
+        rule('(') >> expr >> rule(')');
 
     // An integer is an integer!
     r_int = rule(tk_int);
@@ -154,16 +154,16 @@ int main()
     // We now parse, and build the syntax tree at once
     bool f = false;
     try {
-	f = expr.parse(pc);
+        f = expr.parse(pc);
     } catch(parse_exc &e) {
-	cout << "Parse exception!" << endl;
+        cout << "Parse exception!" << endl;
     }
 
     if (!f) {
-	cout << pc.get_formatted_err_msg();
+        cout << pc.get_formatted_err_msg();
     } else {
-	// Take the tree and return the result
-	auto tr = b.get_tree();
-	cout << "Result = " << tr->compute() << endl; 
+        // Take the tree and return the result
+        auto tr = b.get_tree();
+        cout << "Result = " << tr->compute() << endl; 
     }
 }

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include <tipa/wptr.hpp>
+#include <wptr.hpp>
 
 using namespace std;
 using namespace tipa;
@@ -28,18 +28,18 @@ TEST_CASE("Weak pointer to MyClass, counting objects", "[wptr]")
     auto sp1 = make_shared<MyClass>();
 
     SECTION("Strong pointer") {
-	REQUIRE(wptr_counter == 1);
+        REQUIRE(wptr_counter == 1);
 	
-	auto wptr1 = WPtr<MyClass>(sp1, WPTR_STRONG);
-	sp1.reset();
-	REQUIRE(wptr_counter == 1);
+        auto wptr1 = WPtr<MyClass>(sp1, WPTR_STRONG);
+        sp1.reset();
+        REQUIRE(wptr_counter == 1);
     }
 
     SECTION("Weak pointer") {
-	REQUIRE(wptr_counter == 1);	
-	auto wptr1 = WPtr<MyClass>(sp1, WPTR_WEAK);
-	sp1.reset();
-	REQUIRE(wptr_counter == 0);
-	CHECK(!wptr1.get());
+        REQUIRE(wptr_counter == 1);	
+        auto wptr1 = WPtr<MyClass>(sp1, WPTR_WEAK);
+        sp1.reset();
+        REQUIRE(wptr_counter == 0);
+        CHECK(!wptr1.get());
     }
 }

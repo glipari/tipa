@@ -7,7 +7,7 @@
 #include <vector>
 #include <sstream>
 
-#include <tipa/lexer.hpp>
+#include <lexer.hpp>
 
 using namespace std;
 using namespace tipa;

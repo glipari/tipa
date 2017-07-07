@@ -6,7 +6,7 @@
 #include <vector>
 #include <sstream>
 
-#include <tipa/tinyparser.hpp>
+#include <tinyparser.hpp>
 
 using namespace std;
 using namespace tipa;
