@@ -46,13 +46,16 @@ I cannot guarantee the library will compile on any other system,
 sorry. If you have troubles compiling with your own compiler, drop
 me an e-mail and I will see what I can do.
 
--   To compile and install, just go trough the usual 
-    
-        ./configure && make && make install
+-   To compile use CMake
 
--   You can run the tests with 
+		mkdir bin
+		cd bin
+		cmake ..\
+		make 
+
+-   You can run the tests with
     
-        make check
+        make test
     
     or simply by running the test program:
     
@@ -106,7 +109,7 @@ follows:
 
 -   If you know what you are doing, and you want to release a before
     r, you can transform the lvalue into a rvalue by using
-    =std::move()=. Here is the example;
+    `std::move()`. Here is the example;
     
         rule r;
         {
@@ -120,4 +123,6 @@ follows:
     
     ![Figure 3: Passing ownership explicitely (be careful!).](./doc/mem3.png)
     
-    and at point **2** it becomes the same as in the first case.
+    and at point **2** it becomes the same as in the first case:
+
+	![Figure 4: Same situation as in Fig. 1](./doc/mem1.png)
