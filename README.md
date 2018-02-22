@@ -50,7 +50,7 @@ me an e-mail and I will see what I can do.
 
 		mkdir bin
 		cd bin
-		cmake ..\
+		cmake ../
 		make 
 
 -   You can run the tests with

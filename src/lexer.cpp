@@ -1,3 +1,23 @@
+/*
+  Copyright 2015-2018 Giuseppe Lipari
+  email: giuseppe.lipari@univ-lille.fr
+  
+  This file is part of TiPa.
+
+  TiPa is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  TiPa is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with TiPa. If not, see <http://www.gnu.org/licenses/>
+*/
+
 //#define __LOG__ 1
 #include <iomanip>
 #include "log_macros.hpp"
@@ -18,7 +38,7 @@ namespace tipa {
 
     string parse_exc::what() 
     {
-	return msg;
+        return msg;
     }
 
     lexer::lexer() 
@@ -31,81 +51,81 @@ namespace tipa {
 
     void ahead_lexer::add_token(const token_id &name, const string &expr)
     {
-	array.push_back(token(name, expr));
+        array.push_back(token(name, expr));
     }
 
     void lexer::set_stream(istream &in)
     {
-	// curr_line = "";
-	// start = begin(curr_line);
-	all_lines.clear();
-	while (!saved_ctx.empty()) saved_ctx.pop();
+        // curr_line = "";
+        // start = begin(curr_line);
+        all_lines.clear();
+        while (!saved_ctx.empty()) saved_ctx.pop();
 
-	p_input = &in;
-	nline = 0;
-	ncol = 0;
+        p_input = &in;
+        nline = 0;
+        ncol = 0;
 	
-	next_line();
+        next_line();
     }
 
     void lexer::set_comment(const std::string &b, const std::string &e, const std::string &sl)
     {
-	comment_begin = b;
-	comment_end = e;
-	comment_single_line = sl;
+        comment_begin = b;
+        comment_end = e;
+        comment_single_line = sl;
     }
 
     bool lexer::next_line()
     {
-	INFO_LINE("Next line");
-	if (nline == all_lines.size()) {
-	    if (p_input->eof()) {
-		INFO_LINE("No more lines to process");
-		return false;
-	    }
-	    getline(*p_input, curr_line);
-	    all_lines.push_back(curr_line);
-	} else if (nline > all_lines.size()) { 
-	    throw parse_exc("Lexer: exceeding all_lines array lenght!");
-	} else {
-	    INFO_LINE("Going ahead again!");
-	    INFO_LINE(curr_line);
-	    INFO_LINE(all_lines[nline]);
-	}
+        INFO_LINE("Next line");
+        if (nline == all_lines.size()) {
+            if (p_input->eof()) {
+                INFO_LINE("No more lines to process");
+                return false;
+            }
+            getline(*p_input, curr_line);
+            all_lines.push_back(curr_line);
+        } else if (nline > all_lines.size()) { 
+            throw parse_exc("Lexer: exceeding all_lines array lenght!");
+        } else {
+            INFO_LINE("Going ahead again!");
+            INFO_LINE(curr_line);
+            INFO_LINE(all_lines[nline]);
+        }
     
-	nline++;
-	curr_line = all_lines[nline-1];
-	ncol = 0;
-	start = curr_line.begin();	
-	return true;
+        nline++;
+        curr_line = all_lines[nline-1];
+        ncol = 0;
+        start = curr_line.begin();	
+        return true;
     }
 
 
     void lexer::save() 
     {
-	ctx c;
-	c.nl = nline; 
-	c.nc = ncol;
-	if (start == curr_line.end()) c.dist = -1;
-	else c.dist = std::distance(curr_line.begin(), start);
+        ctx c;
+        c.nl = nline; 
+        c.nc = ncol;
+        if (start == curr_line.end()) c.dist = -1;
+        else c.dist = std::distance(curr_line.begin(), start);
 
-	saved_ctx.push(c);
+        saved_ctx.push(c);
     }
 
     void lexer::restore()
     {
-	ctx c = saved_ctx.top();
-	saved_ctx.pop();
-	nline = c.nl;
-	ncol = c.nc;
-	curr_line = all_lines[nline-1];
-	if (c.dist < 0) start = curr_line.end();
-	else start = curr_line.begin() + c.dist;
+        ctx c = saved_ctx.top();
+        saved_ctx.pop();
+        nline = c.nl;
+        ncol = c.nc;
+        curr_line = all_lines[nline-1];
+        if (c.dist < 0) start = curr_line.end();
+        else start = curr_line.begin() + c.dist;
     }
 
     void lexer::discard_saved()
     {
-	saved_ctx.pop();
+        saved_ctx.pop();
     }
 
     void lexer::skip_spaces()
@@ -201,36 +221,36 @@ namespace tipa {
 
     std::string lexer::extract_line()
     {
-	std::string s(start, curr_line.end());
-	next_line();
-	return s;
+        std::string s(start, curr_line.end());
+        next_line();
+        return s;
     }
 
     std::string lexer::extract(const std::string &sym_begin, const std::string &sym_end)
     {
-	std::string result;
+        std::string result;
 
-	for (;;) {
-	    while (start == curr_line.end()) {
-		if (not next_line()) 
-		    throw parse_exc("END OF INPUT WHILE EXTRACTING");
-		//return result;
-		result += "\n";
-	    }
-	    std::string s1(start, start + sym_begin.size() );
-	    std::string s2(start, start + sym_end.size() );
-	    if (sym_begin != "" and s1 == sym_begin) {
-		result += s1;
-		start += sym_begin.size();
-		result += extract(sym_begin, sym_end) + sym_end;
-	    } else if (s2 == sym_end) {
-		start += sym_end.size();
-		return result;
-	    }
-	    else {
-		result += *start;
-		start++;
-	    }
-	}
+        for (;;) {
+            while (start == curr_line.end()) {
+                if (not next_line()) 
+                    throw parse_exc("END OF INPUT WHILE EXTRACTING");
+                //return result;
+                result += "\n";
+            }
+            std::string s1(start, start + sym_begin.size() );
+            std::string s2(start, start + sym_end.size() );
+            if (sym_begin != "" and s1 == sym_begin) {
+                result += s1;
+                start += sym_begin.size();
+                result += extract(sym_begin, sym_end) + sym_end;
+            } else if (s2 == sym_end) {
+                start += sym_end.size();
+                return result;
+            }
+            else {
+                result += *start;
+                start++;
+            }
+        }
     }
 }
