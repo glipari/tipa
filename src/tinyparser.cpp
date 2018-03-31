@@ -77,7 +77,7 @@ int abs_counter=0;
 
         void parser_context::push_token(const std::string &s)
         {
-            collected.push_back({LEX_EXTRACTED_STRING, s});
+            collected.push_back({/*LEX_EXTRACTED_STRING*/tk_extracted.get_name(), s});
         }
 
 
@@ -325,14 +325,14 @@ int abs_counter=0;
         {
             std::string p{c};
             p = padding(p);
-            token tk = {LEX_CHAR, p};
+            token tk = {tk_char.get_name(), p};
             pimpl = std::make_shared<impl_rule>(new term_rule(tk, collect));
         }
 
         rule::rule(const std::string &s, bool collect)
         {
             std::string p = padding(s);
-            token tk = {LEX_CHAR, p};
+            token tk = {tk_char.get_name(), p};
             pimpl = std::make_shared<impl_rule>(new term_rule(tk, collect));
         }
 
@@ -686,8 +686,8 @@ int abs_counter=0;
                 {}
             bool parse(parser_context &pc) {
                 INFO("extr_rule::parse()");
-                token open_tk = {LEX_CHAR, padding(open_sym)};
-                if (pc.try_token(open_tk).first == LEX_CHAR) {
+                token open_tk = {tk_char.get_name(), padding(open_sym)};
+                if (pc.try_token(open_tk).first == tk_char.get_name()) {
                     if (line) {
                         pc.push_token(pc.extract_line());
                         INFO_LINE(" ** ok");

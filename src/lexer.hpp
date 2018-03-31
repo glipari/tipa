@@ -28,17 +28,16 @@
 #define LEX_EMPTY  0
 #define LEX_ERROR -1
 
-typedef int token_id;
-
 namespace tipa {
+    typedef int token_id;
 
     class parse_exc : public std::exception {
-	std::string msg;
+        std::string msg;
     public:
-	parse_exc();
-	parse_exc(const std::string &err_msg); 
-	std::string what();
-	~parse_exc() throw();
+        parse_exc();
+        parse_exc(const std::string &err_msg); 
+        std::string what();
+        ~parse_exc() throw();
     };
 
 
@@ -51,33 +50,43 @@ namespace tipa {
     time.  Could also be done in a lazy way...
 */
     struct token {
-	token(const std::pair<token_id, std::string> &p) :
-	    name(p.first), expr(p.second) {}
+        token(const std::pair<token_id, std::string> &p) :
+            name(p.first), expr(p.second) {}
 
-	token(const token_id &n, const std::string &e) :
-	    name(n), expr(e) {}
+        token(const token_id &n, const std::string &e) :
+            name(n), expr(e) {}
 
-	token_id    get_name() const { return name; } 
-	std::string get_expr() const { return expr; } 
+        token_id    get_name() const { return name; } 
+        std::string get_expr() const { return expr; } 
     private:
-	token_id name;
-	std::string expr;
+        token_id name;
+        std::string expr;
     };
 
     typedef std::pair<token_id, std::string> token_val;
 
-/// These are already defined in the lexer
     const int LEX_LIB_BASE    = 1000;
-    const int LEX_INT         = (LEX_LIB_BASE + 1);
-    const int LEX_IDENTIFIER  = (LEX_LIB_BASE + 2);
-    const int LEX_EXTRACTED_STRING = (LEX_LIB_BASE + 3);
-    const int LEX_CHAR        = (LEX_LIB_BASE + 4);
+    token create_lib_token(const std::string &reg_ex); 
     
-    
+/// These are already defined in the lexer
+    const token tk_int = create_lib_token("^\\d+\\b");    // an integer
+    const token tk_ident = create_lib_token("^[^\\d\\W]\\w*"); // an identifier
 
-    const token tk_int(LEX_INT, "^\\d+\\b"); 
-    const token tk_ident(LEX_IDENTIFIER, "^[^\\d\\W]\\w*");
+    const token tk_extracted = create_lib_token("");   // reserve the identifier
+    const token tk_char = create_lib_token("");        // reserve the identifier
+    const token tk_op_par = create_lib_token("\\(");   // open parenthesis
+    const token tk_cl_par = create_lib_token("\\)");   // ecc.
+    const token tk_op_sq = create_lib_token("\\[");
+    const token tk_cl_sq = create_lib_token("\\]");
+    const token tk_op_br = create_lib_token("\\{");
+    const token tk_cl_br = create_lib_token("\\}");
+    const token tk_comma = create_lib_token(",");
+    const token tk_colon = create_lib_token(":");
+    const token tk_semicolon = create_lib_token(";");
+    const token tk_equality = create_lib_token("==");
+    const token tk_assignment = create_lib_token(":=");
 
+   
 /**
    This class performs the work of the lexer.  
 
@@ -115,75 +124,75 @@ namespace tipa {
 */
     class lexer {
     protected:
-	struct ctx {
-	    int dist;
-	    unsigned nl, nc;
-	};
+        struct ctx {
+            int dist;
+            unsigned nl, nc;
+        };
 
-	std::string::iterator start;
-	std::istream *p_input;
-	std::string curr_line;
-	unsigned nline, ncol;
+        std::string::iterator start;
+        std::istream *p_input;
+        std::string curr_line;
+        unsigned nline, ncol;
+        
+        std::vector<std::string> all_lines;
+        std::stack<ctx> saved_ctx; 
 
-	std::vector<std::string> all_lines;
-	std::stack<ctx> saved_ctx; 
+        std::string comment_begin; 
+        std::string comment_end;
+        std::string comment_single_line;
 
-	std::string comment_begin; 
-	std::string comment_end;
-	std::string comment_single_line;
-
-	bool next_line();
-	void skip_spaces();
+        bool next_line();
+        void skip_spaces();
     public:
     
-	lexer();
+        lexer();
     
-	/// Saves the context of the lexer, we can restore it later
-	void save(); 
-	/// Restores the context to the last saved one 
-	void restore();
-	/// Discard the last saved context
-	void discard_saved();
+        /// Saves the context of the lexer, we can restore it later
+        void save(); 
+        /// Restores the context to the last saved one 
+        void restore();
+        /// Discard the last saved context
+        void discard_saved();
 
-	/// Configures the lexer to skip all characters between strings b
-	/// and e, and all characters from string sl until the end of the
-	/// current line. The intended use is to skip comments.
-	void set_comment(const std::string &b, 
-			 const std::string &e, 
-			 const std::string &sl);
+        /// Configures the lexer to skip all characters between strings b
+        /// and e, and all characters from string sl until the end of the
+        /// current line. The intended use is to skip comments.
+        void set_comment(const std::string &b, 
+                         const std::string &e, 
+                         const std::string &sl);
 
-	/// set the stream for this lexer
-	void set_stream(std::istream &in);
+        /// set the stream for this lexer
+        void set_stream(std::istream &in);
 
-	/// checks if the token is found, and returns it, or an error
-	token_val try_token(const token &x);
+        /// checks if the token is found, and returns it, or an error
+        token_val try_token(const token &x);
 
-	/// returns the current position (line num, column num)
-	std::pair<int, int> get_pos() const { return {nline, ncol}; }
+        /// returns the current position (line num, column num)
+        std::pair<int, int> get_pos() const { return {nline, ncol}; }
 
-	/// returns the line that is currently being processed
-	std::string get_currline() const { return curr_line; }
+        /// returns the line that is currently being processed
+        std::string get_currline() const { return curr_line; }
 
-	/**
-	   Extracts a string encompassed between the two strings
-	   sym_begin and sym_end. It takes into account nesting, so it
-	   returns the string corresponding to the matching symbol, and
-	   throws an exception if it does not find one.
+        /**
+           Extracts a string encompassed between the two strings
+           sym_begin and sym_end. It takes into account nesting, so it
+           returns the string corresponding to the matching symbol, and
+           throws an exception if it does not find one.
 
-	   Useful for implementing nesting parsers, and extract comments.
-	*/
-	std::string extract(const std::string &sym_begin, const std::string &sym_end);
-	std::string extract_line();
+           Useful for implementing nesting parsers, and extract comments.
+        */
+        std::string extract(const std::string &sym_begin, const std::string &sym_end);
+        std::string extract_line();
     };
 
     class ahead_lexer : public lexer {
-	std::vector<token> array;
+        std::vector<token> array;
     public:
-	ahead_lexer(const std::vector<token> &keys);
-	void add_token(const token_id &name, const std::string &expr);
+        ahead_lexer(const std::vector<token> &keys);
+        void add_token(const token_id &name, const std::string &expr);
 
-	/// returns the next token as a pair of strings
-	std::pair<token_id, std::string> get_token();
+        /// returns the next token as a pair of strings
+        std::pair<token_id, std::string> get_token();
     };
 }
 

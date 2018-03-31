@@ -41,6 +41,12 @@ namespace tipa {
         return msg;
     }
 
+    token create_lib_token(const std::string &reg_ex)
+    {
+        static token_id index = LEX_LIB_BASE;
+        return token(++index, reg_ex);
+    }
+    
     lexer::lexer() 
     {
     }
