@@ -72,6 +72,8 @@ namespace tipa {
     const int LEX_IDENTIFIER  = (LEX_LIB_BASE + 2);
     const int LEX_EXTRACTED_STRING = (LEX_LIB_BASE + 3);
     const int LEX_CHAR        = (LEX_LIB_BASE + 4);
+    
+    
 
     const token tk_int(LEX_INT, "^\\d+\\b"); 
     const token tk_ident(LEX_IDENTIFIER, "^[^\\d\\W]\\w*");
