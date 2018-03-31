@@ -255,3 +255,4 @@ SCENARIO("Ownership test", "[parser]")
         }
     }
 }
+

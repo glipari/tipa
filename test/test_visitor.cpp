@@ -66,7 +66,10 @@ TEST_CASE("testing visitor", "[visitor]")
     der1 d1; d1.a = 5;
     der2 d2; d2.name = "Peppe";
 
-    vector<AbstractVisitable<TypeList> *> v; v.push_back(&d1); v.push_back(&d2);
+    vector<AbstractVisitable<TypeList> *> v;
+    v.push_back(&d1);
+    v.push_back(&d2);
+
     MyVisitor vis;
 
     for (auto x : v) {
