@@ -272,16 +272,28 @@ TEST_CASE("Greedy repetition of sequence", "[parser]")
 
 TEST_CASE("Greedy repetition of alternatives", "[parser]")
 {
-    stringstream str("{ abc 123 } { abc def}\n\t\t{def 234}");
-    parser_context pc;
-    
-    pc.set_stream(str);
     rule n1 = *(rule('{') >> rule(tk_ident) >> (rule(tk_int) | rule(tk_ident))  >> rule('}'));
-    CHECK(n1.parse(pc));
-    
-    auto v = pc.collect_tokens();
-    CHECK(v.size() == 6);
-    //for (auto x : v) cout << x.second << endl;
+
+    SECTION("Correct") {
+        stringstream str("{ abc 123 } { abc def}\n\t\t{def 234}");
+        parser_context pc;    
+        pc.set_stream(str);
+        
+        CHECK(n1.parse(pc));
+        
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 6);
+    }
+    SECTION("Not Correct") {
+        stringstream str("{ abc 123 } {abc def}\n\t\t{def}");
+        parser_context pc;    
+        pc.set_stream(str);
+        
+        CHECK(n1.parse(pc) == false);
+        
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 4);
+    }
 }
 
 
