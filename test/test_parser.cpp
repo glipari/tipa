@@ -217,6 +217,103 @@ TEST_CASE("Repetition rule followed by a line break", "[parser]")
     }
 }
 
+TEST_CASE("Greedy repetition", "[parser]")
+{
+    stringstream str1("123");
+    stringstream str2("123 456\n 789");
+    parser_context pc1;
+    parser_context pc2;
+    SECTION("Section 1") {
+        pc1.set_stream(str1);
+        rule n1 = *rule(tk_int);
+        CHECK(n1.parse(pc1));
+        CHECK(pc1.collect_tokens().size() == 1);
+    }
+    SECTION("Section 2") {
+        rule n2 = *rule(tk_int);
+        pc2.set_stream(str2);
+        try {
+            CHECK(n2.parse(pc2));
+            auto v = pc2.collect_tokens();
+            CHECK(v.size() == 3);
+        } catch(parse_exc e) {
+            cout << e.what() << endl;
+            throw;
+        }
+    }
+}
+
+
+TEST_CASE("Greedy repetition of sequence", "[parser]")
+{
+    stringstream str1("{ abc 123 }");
+    stringstream str2("{ abc 123 } { abc 456}\n\t\t{def 789}");
+    parser_context pc1;
+    parser_context pc2;
+    SECTION("Section 1") {
+        pc1.set_stream(str1);
+        rule n1 = *(rule('{') >> rule(tk_ident) >> rule(tk_int) >> rule('}'));
+        CHECK(n1.parse(pc1));
+    }
+    SECTION("Section 2") {
+        rule n2 = *(rule('{') >> rule(tk_ident) >> rule(tk_int) >> rule('}'));
+        pc2.set_stream(str2);
+        try {
+            CHECK(n2.parse(pc2));
+            auto v = pc2.collect_tokens();
+            CHECK(v.size() == 6);
+        } catch(parse_exc e) {
+            cout << e.what() << endl;
+            throw;
+        }
+    }
+}
+
+
+TEST_CASE("Greedy repetition of alternatives", "[parser]")
+{
+    stringstream str("{ abc 123 } { abc def}\n\t\t{def 234}");
+    parser_context pc;
+    
+    pc.set_stream(str);
+    rule n1 = *(rule('{') >> rule(tk_ident) >> (rule(tk_int) | rule(tk_ident))  >> rule('}'));
+    CHECK(n1.parse(pc));
+    
+    auto v = pc.collect_tokens();
+    CHECK(v.size() == 6);
+    //for (auto x : v) cout << x.second << endl;
+}
+
+
+TEST_CASE("Using more than one rule", "[parser]")
+{
+    rule alt = rule(tk_ident) >> rule('=') >> (rule(tk_int) | rule(tk_ident));    
+    rule root = *(rule('{') >>  alt  >> rule('}'));
+
+
+    SECTION("Correct") {
+        stringstream str("{ abc = 123 } { abc = def}\n\t\t{def = 234}");
+        parser_context pc;
+        
+        pc.set_stream(str);
+        CHECK(root.parse(pc));
+    
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 6);
+    }
+    SECTION("Not Correct") {
+        stringstream str("{ abc = 123 } { abc def}\n\t\t{def = 234}");
+        parser_context pc;
+        
+        pc.set_stream(str);
+        CHECK(root.parse(pc) == false);
+    
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 2);
+    }
+}
+
+
 
 
 SCENARIO("Ownership test", "[parser]")
