@@ -30,6 +30,7 @@ using namespace std;
 namespace tipa {
     parse_exc::parse_exc() 
     {}
+    
     parse_exc::parse_exc(const string &err_msg) : msg(err_msg)
     {} 
 
@@ -62,8 +63,6 @@ namespace tipa {
 
     void lexer::set_stream(istream &in)
     {
-        // curr_line = "";
-        // start = begin(curr_line);
         all_lines.clear();
         while (!saved_ctx.empty()) saved_ctx.pop();
 
@@ -81,6 +80,15 @@ namespace tipa {
         comment_single_line = sl;
     }
 
+    bool lexer::eof()
+    {
+        do {
+            skip_spaces();
+            if (start != curr_line.end()) return false;
+        } while (next_line());
+        return ((start == curr_line.end()) && (nline == all_lines.size()) && p_input->eof());
+    }
+    
     bool lexer::next_line()
     {
         INFO_LINE("Next line");

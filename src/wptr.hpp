@@ -37,7 +37,7 @@ namespace tipa {
             else sptr = std::shared_ptr<T>(addr);
         } 
 
-        std::shared_ptr<T> get() {
+        std::shared_ptr<T> get() const {
             if (is_weak == WPTR_WEAK) {
                 return wptr.lock();
             }

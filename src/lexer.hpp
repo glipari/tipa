@@ -173,6 +173,8 @@ namespace tipa {
         /// returns the line that is currently being processed
         std::string get_currline() const { return curr_line; }
 
+        bool eof();
+
         /**
            Extracts a string encompassed between the two strings
            sym_begin and sym_end. It takes into account nesting, so it

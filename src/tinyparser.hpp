@@ -68,6 +68,7 @@ namespace tipa {
 
         std::string get_error_string() const { return error_msg.second; }
         std::string get_formatted_err_msg();
+        bool eof();
         std::pair<int, int> get_error_pos() const { return lex.get_pos(); }
 
         void push_token(token_val tk);
@@ -114,7 +115,7 @@ namespace tipa {
         rule &operator=(const rule &);
     
         /// Parses a rule
-        bool parse(parser_context &pc);
+        bool parse(parser_context &pc) const;
 
         /// Sets an action for this rule
         rule& operator[](action_t af); 
@@ -178,6 +179,9 @@ namespace tipa {
 
     /** Matches a given keyword. By default, the keyword is collected. */
     rule keyword(const std::string &key, bool collect = true);
+
+    /** the global parsing function */
+    bool parse_all(const rule &r, parser_context &pc);
 }
 
 #endif

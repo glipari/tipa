@@ -37,6 +37,13 @@ int abs_counter=0;
 #endif
 
 namespace tipa {
+    //-----------------------------------------
+    /* Implementation of Parser Context
+
+       This is a simple data structure that contains the state of the
+       parser.  In fact, the state is not stored in the rules, but in
+       this context that is passed around the rules and updated accordingly.
+    */
     parser_context::parser_context() : lex{}
     {}
     
@@ -79,7 +86,6 @@ namespace tipa {
     {
         collected.push_back({/*LEX_EXTRACTED_STRING*/tk_extracted.get_name(), s});
     }
-
 
     void parser_context::save() 
     {
@@ -126,13 +132,17 @@ namespace tipa {
         std::reverse(std::begin(v), std::end(v));
         return v;
     }
-
         
     void parser_context::set_error(const token_val &err_msg)
     {
         error_msg = err_msg;
     }
 
+    bool parser_context::eof()
+    {
+        return lex.eof();
+    }
+    
     std::string parser_context::get_formatted_err_msg()
     {
         std::stringstream err;
@@ -153,6 +163,15 @@ namespace tipa {
        We have two levels of classes/objects for implementing the rule
        class.  
 
+       +------------+
+       | rule       |      +-------------+ 
+       |            |      |  impl_rule  |      +-----------+
+       |       * ---+----->|             |      | abs_rule  |
+       |            |      |       * ----+----->|           |
+       +------------+      |             |      |           |
+                           +-------------+      |           |
+                                                +-----------+
+ 
        1) struct impl_rule: the rule class contains a shared pointer to this
        structure. This class is not polymorphic. It contains a shared
        pointer to an abs_rule.
@@ -161,8 +180,8 @@ namespace tipa {
        These classes contain the actual parsing code for the different rules. 
        A abs_rule class can be:
        - a term-rule: this represents a leaf in the tree, and the parsing is done by the lexer
-       - a seq_rule: contains a vector of pointers to struct impl_rule  
-       - a alt_rule: contains a vector of pointers to struct impl_rule
+       - a seq_rule: contains a vector of pointers to struct impl_rule (all must be true) 
+       - a alt_rule: contains a vector of pointers to struct impl_rule (at least one must be true)
        - a rep_rule: contains one shared pointer to a struct impl_rule
 
        therefore:
@@ -190,7 +209,7 @@ namespace tipa {
        +------------------------------- seq_rule --> term_rule('+')
                                                          
        
-       Notice that there is a cycle. If all pointers are shared_prt,
+       Notice that there is a cycle. If all pointers were shared_prt,
        we run into a memory leak when we destroy expr.  So, the
        strategy is the following: 
 
@@ -224,7 +243,7 @@ namespace tipa {
         action_t fun;
     public:
         abs_rule() : fun(nullptr) { INC_COUNT; }
-        virtual bool parse(parser_context &pc) = 0;
+        virtual bool parse(parser_context &pc) const = 0;
         bool action(parser_context &pc);
         virtual ~abs_rule() { DEC_COUNT; }
         virtual std::string print(av_set &already_visited) {return std::string("");}
@@ -256,7 +275,7 @@ namespace tipa {
         impl_rule() : abs_impl(nullptr) {}
         impl_rule(abs_rule *r) : abs_impl(r) {}
     
-        bool parse(parser_context &pc) {
+        bool parse(parser_context &pc) const {
             if (!abs_impl) return false;
 
             bool f = abs_impl->parse(pc); 
@@ -280,7 +299,7 @@ namespace tipa {
         bool collect;
     public:
         term_rule(const token &tk, bool c = true) : mytoken(tk), collect(c) {}
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
         std::string print(av_set &av) {
             return std::string("TERM: ") + mytoken.get_expr(); 
         }
@@ -346,7 +365,7 @@ namespace tipa {
         return *this;
     }
 
-    bool rule::parse(parser_context &pc) 
+    bool rule::parse(parser_context &pc) const
     { 
         bool f = pimpl->parse(pc); 
         return f;
@@ -359,7 +378,7 @@ namespace tipa {
         return *this;
     }
 
-    bool term_rule::parse(parser_context &pc)
+    bool term_rule::parse(parser_context &pc) const
     {
         INFO_LINE("term_rule::parse() trying " << mytoken.get_expr());
         token_val result = pc.try_token(mytoken);
@@ -391,7 +410,7 @@ namespace tipa {
         seq_rule(rule &a, rule &&b);
         seq_rule(rule &&a, rule &&b);
  
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
         std::string print(av_set &av);
     };
 
@@ -421,20 +440,24 @@ namespace tipa {
         rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
-    bool seq_rule::parse(parser_context &pc)
+    bool seq_rule::parse(parser_context &pc) const
     {
         INFO("seq_rule::parse()");
 
+        int i = 0;
         pc.save();
         for (auto &x : rl) {
             if (auto spt = x.get()) {
                 if (!spt->parse(pc)) {
-                    // TODO, better error is necessary!
-                    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
-                    INFO_LINE(" ** FALSE ");
-                    pc.restore();
-                    return false;
+                    if (pc.get_error_string() == "EOF" && i == 0) return false; 
+                    else {
+                        pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+                        INFO_LINE(" ** FALSE ");
+                        pc.restore();
+                        return false;
+                    }
                 }
+                i++;
             }
             else {
                 throw parse_exc("seq_parse: weak pointer error!");
@@ -502,7 +525,7 @@ namespace tipa {
         alt_rule(rule &a, rule &&b);
         alt_rule(rule &&a, rule &&b);
 
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
         virtual std::string print(av_set &av);
     };
 
@@ -530,7 +553,7 @@ namespace tipa {
         rl.push_back(WPtr<impl_rule>(b.get_pimpl(), WPTR_STRONG));
     }
 
-    bool alt_rule::parse(parser_context &pc)
+    bool alt_rule::parse(parser_context &pc) const
     {
         INFO("alt_rule::parse() | ");
         for (auto &x : rl)
@@ -599,11 +622,11 @@ namespace tipa {
     class null_rule : public abs_rule {
     public:
         null_rule() {}
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
     };
 
     
-    bool null_rule::parse(parser_context &pc)
+    bool null_rule::parse(parser_context &pc) const
     {
         return true;
     }
@@ -619,7 +642,7 @@ namespace tipa {
         rep_rule(rule &a);
         rep_rule(rule &&a);
 
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
         virtual std::string print(av_set &av);
     };
 
@@ -631,17 +654,56 @@ namespace tipa {
     {
     }
 
-    bool rep_rule::parse(parser_context &pc)
+
+    /**
+       I have a problem here.  What if the last instance failed to
+       parse ?  
+
+       1) this is indeed an error: there is nothing else to do, and
+       part of the file could not be parsed correctly, so I have to
+       point out this problem
+
+       2) We encounter an EOF before parsing, so we are done with it,
+       parsing is completed.
+
+       3) Last part was not parsed correctly, but this is not a
+       problem, because another rule follows which will correctly get
+       it.
+
+       Case 2 can be identified easily. Case 1 is difficult to
+       distinguish from Case 3. It depends on what we do after: do we
+       reparse the erroneous part or not?
+
+       For example:
+
+       abc abc abc 123
+
+       if the grammar is *rule(tk_ident), the above is an error if the
+       grammar is *rule(tk_ident) >> rule(tk_int), then no error.
+
+       I guess the only way to understand if this is an error is to
+       look at what happens after we parsed the whole file. Did we
+       reach EOF ? If so, then OK. If not, then ERROR. 
+
+       So, I will do a global function parse_all(rule) that invokes
+       the rule.parse() and then checks if the whole file was parsed
+       correctly. If so, then returns ok, otherwise it is an error.
+
+       And the repetion rule just returns true ALWAYS. 
+     */
+    bool rep_rule::parse(parser_context &pc) const
     {
         INFO("rep_rule::parse() | ");
         if (rl.get()) {
             while (rl.get()->parse(pc)) INFO("*");
             INFO(" end ");
+            // if (pc.get_error_string() != "EOF" && i == 0) return false;
+            // else return true;
         }
         else {
             throw parse_exc("rep_rule: unvalid weak pointer");
         }
-        return true;	
+        return true;
     }
 
     std::string rep_rule::print(av_set &av) 
@@ -684,7 +746,7 @@ namespace tipa {
         extr_rule(const std::string &op_cl, bool l = false) :
             open_sym(op_cl), close_sym(op_cl), nested(false), line(l)
             {}
-        bool parse(parser_context &pc) {
+        bool parse(parser_context &pc) const {
             INFO("extr_rule::parse()");
             token open_tk = {tk_char.get_name(), padding(open_sym)};
             if (pc.try_token(open_tk).first == tk_char.get_name()) {
@@ -714,11 +776,11 @@ namespace tipa {
     public:
         keyword_rule(const std::string &key, bool collect) : kw(key), rl(tk_ident, collect) {}
 
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const;
         virtual std::string print(av_set &av);
     };
 
-    bool keyword_rule::parse(parser_context &pc)
+    bool keyword_rule::parse(parser_context &pc) const
     {
         pc.save();
         bool flag = rl.parse(pc);
@@ -774,7 +836,7 @@ namespace tipa {
         strict_seq_rule(rule &a, rule &&b);
         strict_seq_rule(rule &&a, rule &&b);
 
-        virtual bool parse(parser_context &pc);
+        virtual bool parse(parser_context &pc) const; 
     };
 
     strict_seq_rule::strict_seq_rule(rule &a, rule &b) : seq_rule(a, b)
@@ -793,7 +855,7 @@ namespace tipa {
     {
     }
 
-    bool strict_seq_rule::parse(parser_context &pc)
+    bool strict_seq_rule::parse(parser_context &pc) const
     {
         INFO("strict_seq_rule::parse()");
 
@@ -862,6 +924,18 @@ namespace tipa {
         auto s = std::make_shared<impl_rule>(new alt_rule(std::move(a), null()));
         return rule(s);
     }
+
+
+    bool parse_all(const rule &r, parser_context &pc)
+    {
+        bool f = r.parse(pc);
+        bool e = pc.eof();
+        // std::cout << "parse_all() = " << f << "   eof = " << e << std::endl;
+        if (!e) return false;
+        else return f;
+    }
+
+
 }
 
 

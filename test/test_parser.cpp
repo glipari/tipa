@@ -30,18 +30,27 @@
 using namespace std;
 using namespace tipa;
 
-//#define LEX_ADD   2
-//#define LEX_SUB   3
+
+void print_tokens (parser_context &pc)
+{
+    auto v = pc.collect_tokens();
+    cout << "N. collected tokens : " << v.size() << endl;
+    for (auto x : v) cout << " - " << x.second << endl;
+}
+
 
 TEST_CASE( "Two terminals, separated by addition symbol", "[parser]")
 {
+    rule expr = rule(tk_int) >> rule('+') >> rule(tk_int);
+    
     stringstream str("12 + 25");
     parser_context pc;
     pc.set_stream(str);
 
-    rule expr = rule(tk_int) >> rule('+') >> rule(tk_int);
-
-    REQUIRE(expr.parse(pc) == true);
+    CHECK(parse_all(expr,pc));
+    // cout << "ERROR: " << pc.get_error_string() << endl;
+    // print_tokens(pc);
+    // cout << "eof : " << pc.eof() << endl;
 }
 
 TEST_CASE( "Addition / subtraction", "[parser]")
@@ -53,7 +62,7 @@ TEST_CASE( "Addition / subtraction", "[parser]")
     rule op = rule('+') | rule('-');
     
     rule expr = rule(tk_int) >> op >> rule(tk_int) >> op >> rule(tk_int);
-    REQUIRE(expr.parse(pc) == true);
+    REQUIRE(parse_all(expr, pc) == true);
 }
 
 
@@ -68,7 +77,7 @@ TEST_CASE("Recursive rule")
     rule sum = rule(tk_int) >> op >> expr;
     expr = rule(tk_ident) | sum;
 
-    REQUIRE(expr.parse(pc) == true);
+    REQUIRE(parse_all(expr, pc) == true);
 }
 
 
@@ -81,7 +90,7 @@ TEST_CASE("Simpler sintax", "[parser]")
         parser_context pc;
         pc.set_stream(str);
         rule expr = rule(tk_ident) >> rule(tk_int);
-        REQUIRE(expr.parse(pc));
+        REQUIRE(parse_all(expr, pc));
     }
 
     SECTION("With parenthesis") {
@@ -91,7 +100,7 @@ TEST_CASE("Simpler sintax", "[parser]")
         rule expr = rule(tk_ident) >> rule("(") 
                                    >> rule(tk_int) 
                                    >> rule(")") >> rule(";");
-        REQUIRE(expr.parse(pc));
+        REQUIRE(parse_all(expr, pc));
     }
     
 }
@@ -99,12 +108,12 @@ TEST_CASE("Simpler sintax", "[parser]")
 
 void myfunction(parser_context &pc)
 {
-    cout << "---- Parsed tokens: " << endl;
-    auto v = pc.collect_tokens();
-    for (auto x : v) {
-        cout << x.second << ", "; 
-    }
-    cout << endl;
+    // cout << "---- Parsed tokens: " << endl;
+    // auto v = pc.collect_tokens();
+    // for (auto x : v) {
+    //     cout << x.second << ", "; 
+    // }
+    // cout << endl;
 }
 
 
@@ -125,12 +134,11 @@ TEST_CASE("Null rule", "[parser]")
         rule num = rule(tk_int);
         rule expr = opt >> num;
         pc.set_stream(str1);
-        cout << expr.print() << endl;
 
-        CHECK(expr.parse(pc));
+        CHECK(parse_all(expr, pc));
 
         pc.set_stream(str2);
-        CHECK(expr.parse(pc));
+        CHECK(parse_all(expr, pc));
     }
 
     SECTION("0/1 rule in the middle") {
@@ -140,9 +148,9 @@ TEST_CASE("Null rule", "[parser]")
         rule final = rule('{') >> -rule(tk_int) >> rule('}');
 
         pc.set_stream(str1);
-        CHECK(final.parse(pc));
+        CHECK(parse_all(final, pc));
         pc.set_stream(str2);
-        CHECK(final.parse(pc));
+        CHECK(parse_all(final, pc));
     }
 
     SECTION("0/1 rule with composed rules") {
@@ -152,10 +160,10 @@ TEST_CASE("Null rule", "[parser]")
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
         number[myfunction];
 
-        cout << "first" << endl;
+        //cout << "first" << endl;
         pc.set_stream(str1);
-        CHECK(expr.parse(pc));
-        cout << "------------------" << endl;
+        CHECK(parse_all(expr, pc));
+        //cout << "------------------" << endl;
     }
 
     SECTION("0/1 rule with composed rules again") {
@@ -166,16 +174,16 @@ TEST_CASE("Null rule", "[parser]")
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
         number [myfunction];
 
-        cout << "second" << endl;
+        //cout << "second" << endl;
         pc.set_stream(str2);
-        CHECK(expr.parse(pc));
-        cout << "------------------" << endl;
+        CHECK(parse_all(expr, pc));
+        //cout << "------------------" << endl;
 
-        cout << "Now the failing one " << endl;
+        //cout << "Now the failing one " << endl;
         // this should fail!
         pc.set_stream(str3);
         try {
-            CHECK(!expr.parse(pc));
+            CHECK(!parse_all(expr, pc));
         } catch (std::exception &e) {
             cout << "Exception: " << e.what() << endl;
             throw;
@@ -190,7 +198,7 @@ TEST_CASE("Null rule", "[parser]")
         number[myfunction];
 
         pc.set_stream(str3);
-        CHECK(!expr.parse(pc));
+        CHECK(!parse_all(expr, pc));
     }
 }
 
@@ -203,13 +211,13 @@ TEST_CASE("Repetition rule followed by a line break", "[parser]")
     SECTION("Section 1") {
         pc1.set_stream(str1);
         rule n1 = *(keyword("abc")) >> keyword("dd");
-        CHECK(n1.parse(pc1));
+        CHECK(parse_all(n1, pc1));
     }
     SECTION("Section 2") {
         rule n2 = *(keyword("abc")) >> keyword("dd");	
         pc2.set_stream(str2);
         try {
-            CHECK(n2.parse(pc2));
+            CHECK(parse_all(n2, pc2));
         } catch(parse_exc e) {
             cout << e.what() << endl;
             throw;
@@ -226,14 +234,14 @@ TEST_CASE("Greedy repetition", "[parser]")
     SECTION("Section 1") {
         pc1.set_stream(str1);
         rule n1 = *rule(tk_int);
-        CHECK(n1.parse(pc1));
+        CHECK(parse_all(n1, pc1));
         CHECK(pc1.collect_tokens().size() == 1);
     }
     SECTION("Section 2") {
         rule n2 = *rule(tk_int);
         pc2.set_stream(str2);
         try {
-            CHECK(n2.parse(pc2));
+            CHECK(parse_all(n2, pc2));
             auto v = pc2.collect_tokens();
             CHECK(v.size() == 3);
         } catch(parse_exc e) {
@@ -253,13 +261,13 @@ TEST_CASE("Greedy repetition of sequence", "[parser]")
     SECTION("Section 1") {
         pc1.set_stream(str1);
         rule n1 = *(rule('{') >> rule(tk_ident) >> rule(tk_int) >> rule('}'));
-        CHECK(n1.parse(pc1));
+        CHECK(parse_all(n1, pc1));
     }
     SECTION("Section 2") {
         rule n2 = *(rule('{') >> rule(tk_ident) >> rule(tk_int) >> rule('}'));
         pc2.set_stream(str2);
         try {
-            CHECK(n2.parse(pc2));
+            CHECK(parse_all(n2, pc2));
             auto v = pc2.collect_tokens();
             CHECK(v.size() == 6);
         } catch(parse_exc e) {
@@ -279,17 +287,30 @@ TEST_CASE("Greedy repetition of alternatives", "[parser]")
         parser_context pc;    
         pc.set_stream(str);
         
-        CHECK(n1.parse(pc));
+        //CHECK(n1.parse(pc));
+        CHECK(parse_all(n1, pc));
         
         auto v = pc.collect_tokens();
         CHECK(v.size() == 6);
     }
-    SECTION("Not Correct") {
+    SECTION("Not Correct 1") {
+        stringstream str("{ abc } {abc def}\n\t\t{def 234}");
+        parser_context pc;    
+        pc.set_stream(str);
+        
+        //CHECK(n1.parse(pc) == false);
+        CHECK(parse_all(n1, pc) == false);
+        
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 0);
+    }
+    SECTION("Not Correct 2") {
         stringstream str("{ abc 123 } {abc def}\n\t\t{def}");
         parser_context pc;    
         pc.set_stream(str);
         
-        CHECK(n1.parse(pc) == false);
+        //CHECK(n1.parse(pc) == false);
+        CHECK(parse_all(n1, pc) == false);
         
         auto v = pc.collect_tokens();
         CHECK(v.size() == 4);
@@ -308,7 +329,7 @@ TEST_CASE("Using more than one rule", "[parser]")
         parser_context pc;
         
         pc.set_stream(str);
-        CHECK(root.parse(pc));
+        CHECK(parse_all(root, pc));
     
         auto v = pc.collect_tokens();
         CHECK(v.size() == 6);
@@ -318,7 +339,8 @@ TEST_CASE("Using more than one rule", "[parser]")
         parser_context pc;
         
         pc.set_stream(str);
-        CHECK(root.parse(pc) == false);
+        //CHECK(root.parse(pc) == false);
+        CHECK(parse_all(root, pc) == false);
     
         auto v = pc.collect_tokens();
         CHECK(v.size() == 2);
@@ -342,7 +364,7 @@ SCENARIO("Ownership test", "[parser]")
                 expr = a >> rule('}'); 
             }
             THEN("Parsing raises an exception") {
-                CHECK_THROWS_AS(expr.parse(c), parse_exc);
+                CHECK_THROWS_AS(parse_all(expr, c), parse_exc);
             }
         }
         WHEN("It contains a rule defined on the fly") {
@@ -350,7 +372,7 @@ SCENARIO("Ownership test", "[parser]")
                 expr = rule('{') >> rule('}');
             }
             THEN("No exception is thrown") {
-                CHECK_NOTHROW(expr.parse(c));
+                CHECK_NOTHROW(parse_all(expr, c));
             }
         }
         WHEN("The static rule passes the ownership") {
@@ -359,7 +381,7 @@ SCENARIO("Ownership test", "[parser]")
                 expr = std::move(a) >> rule('}'); 
             }
             THEN ("No exception is thrown") {
-                CHECK_NOTHROW(expr.parse(c));
+                CHECK_NOTHROW(parse_all(expr, c));
             }
         }
     }
