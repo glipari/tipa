@@ -41,6 +41,7 @@ namespace tipa {
     };
 
 
+    typedef std::pair<token_id, std::string> token_val;
 /** 
     This class is a simple pair that represent a token for the Lexer.
     A token is a pair token-name, regular expression that identifies
@@ -57,13 +58,12 @@ namespace tipa {
             name(n), expr(e) {}
 
         token_id    get_name() const { return name; } 
-        std::string get_expr() const { return expr; } 
+        std::string get_expr() const { return expr; }
+        bool        is_instance(token_val v) const { return name == v.first; } 
     private:
         token_id name;
         std::string expr;
     };
-
-    typedef std::pair<token_id, std::string> token_val;
 
     const int LEX_LIB_BASE    = 1000;
     token create_lib_token(const std::string &reg_ex); 

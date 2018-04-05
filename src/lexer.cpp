@@ -145,7 +145,8 @@ namespace tipa {
     void lexer::advance_start(int n)
     {
         while (n>=1) {
-            if (*start == '\t') ncol += 8;
+            if (*start == '\t') //ncol += 8;
+                ncol = (1+(ncol/8))*8;
             else ++ncol;
             ++start;
             --n;

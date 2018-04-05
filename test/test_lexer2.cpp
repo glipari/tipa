@@ -178,7 +178,7 @@ TEST_CASE( "Extraction complex", "[lexer]" ) {
         REQUIRE( r.first == tk_op_par.get_name() );
         REQUIRE( r.second == "/*" );
         std::string s;
-        REQUIRE_THROWS_AS(s = lex.extract("/*", "*/"), parse_exc& );
+        REQUIRE_THROWS_AS(s = lex.extract("/*", "*/"), parse_exc);
     }
 }
 

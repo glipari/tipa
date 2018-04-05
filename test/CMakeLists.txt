@@ -20,6 +20,9 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/struct.txt
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lexer_multi.txt
     ${CMAKE_CURRENT_BINARY_DIR}/lexer_multi.txt COPYONLY)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lexer-test1.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/lexer-test1.txt COPYONLY)
+
 create_test (TestCollector test_collector.cpp)
 create_test (TestLexer     test_lexer.cpp)
 create_test (TestLexer2    test_lexer2.cpp)

@@ -49,6 +49,170 @@ static void check(ahead_lexer &lex, vector<token_id> &results)
     REQUIRE(r.first == LEX_ERROR);
 }
 
+TEST_CASE("Position in file", "[lexer]")
+{
+    ifstream file("lexer-test1.txt");
+    if (!file.is_open()) FAIL("File lexer-test1.txt not found");
+    token tk_eq = create_lib_token("=");
+    ahead_lexer lex({tk_int, tk_ident, tk_op_par, tk_cl_par, tk_eq});
+    lex.set_stream(file);
+
+    CHECK(lex.get_pos().first == 1);
+    CHECK(lex.get_pos().second == 0);
+    
+    // 1234...
+    auto t = lex.get_token();
+    CHECK(tk_int.is_instance(t));
+    CHECK(lex.get_pos().first == 1);
+    CHECK(lex.get_pos().second == 26);
+
+    // abcde
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 2);
+    CHECK(lex.get_pos().second == 5);
+
+    // lkfrf
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 2);
+    CHECK(lex.get_pos().second == 11);
+
+    // var
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 3);
+    CHECK(lex.get_pos().second == 3);
+
+    // = 
+    t = lex.get_token();
+    CHECK(tk_eq.is_instance(t));
+    CHECK(lex.get_pos().first == 3);
+    CHECK(lex.get_pos().second == 5);
+
+    // 42
+    t = lex.get_token();
+    CHECK(tk_int.is_instance(t));
+    CHECK(lex.get_pos().first == 3);
+    CHECK(lex.get_pos().second == 8);
+
+    // var
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 4);
+    CHECK(lex.get_pos().second == 11);
+
+    // =
+    t = lex.get_token();
+    CHECK(tk_eq.is_instance(t));
+    CHECK(lex.get_pos().first == 4);
+    CHECK(lex.get_pos().second == 12);
+
+    // 42
+    t = lex.get_token();
+    CHECK(tk_int.is_instance(t));
+    CHECK(lex.get_pos().first == 4);
+    CHECK(lex.get_pos().second == 14);
+
+    // normal
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 6);
+
+    // =
+    t = lex.get_token();
+    CHECK(tk_eq.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 8);
+
+    // 42
+    t = lex.get_token();
+    CHECK(tk_int.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 11);
+
+    CHECK(not lex.eof());
+
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 16);
+
+    CHECK(not lex.eof());
+
+    // var
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 19);
+
+    // =
+    t = lex.get_token();
+    CHECK(tk_eq.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 21);
+
+    // 42
+    t = lex.get_token();
+    CHECK(tk_int.is_instance(t));
+    CHECK(lex.get_pos().first == 5);
+    CHECK(lex.get_pos().second == 24);
+
+    // (
+    t = lex.get_token();
+    CHECK(tk_op_par.is_instance(t));
+    CHECK(lex.get_pos().first == 6);
+    CHECK(lex.get_pos().second == 1);
+    
+    auto s = lex.extract("(", ")");
+    CHECK(s == "extracting");
+    CHECK(lex.get_pos().first == 6);
+    CHECK(lex.get_pos().second == 12);
+
+    CHECK(not lex.eof());
+    CHECK(lex.get_pos().first == 7);
+    CHECK(lex.get_pos().second == 8);    
+
+    // (
+    t = lex.get_token();
+    CHECK(tk_op_par.is_instance(t));
+    CHECK(lex.get_pos().first == 7);
+    CHECK(lex.get_pos().second == 9);
+    
+    s = lex.extract("(", ")");
+    CHECK(s == "extracting");
+    CHECK(lex.get_pos().first == 7);
+    CHECK(lex.get_pos().second == 20);
+
+    // (
+    t = lex.get_token();
+    CHECK(tk_op_par.is_instance(t));
+    CHECK(lex.get_pos().first == 11);
+    CHECK(lex.get_pos().second == 1);
+
+    s = lex.extract("(", ")");
+    CHECK(lex.get_pos().first == 14);
+    CHECK(lex.get_pos().second == 41);
+
+    CHECK(not lex.eof());
+
+    CHECK(lex.get_pos().first == 15);
+
+    // The
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 15);
+    CHECK(lex.get_pos().second == 3);
+    // end
+    t = lex.get_token();
+    CHECK(tk_ident.is_instance(t));
+    CHECK(lex.get_pos().first == 15);
+    CHECK(lex.get_pos().second == 7);
+
+    CHECK(lex.eof());
+}
+
+
+
 TEST_CASE("struct from file", "[lexer]")
 {
     ifstream file("struct.txt");
