@@ -129,6 +129,7 @@ namespace tipa {
             unsigned nl, nc;
         };
 
+        // current position in the curr_line
         std::string::iterator start;
         std::istream *p_input;
         std::string curr_line;
@@ -143,6 +144,8 @@ namespace tipa {
 
         bool next_line();
         void skip_spaces();
+        void advance_start(int n=1);
+        
     public:
     
         lexer();

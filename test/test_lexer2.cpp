@@ -109,24 +109,23 @@ TEST_CASE( "Initialization", "[lexer]" ) {
 
 
 TEST_CASE( "Extraction simple", "[lexer]" ) {
-    ahead_lexer lex({
-            {tk_op_par.get_name(), "\\("},
-            {tk_cl_par.get_name(), "\\)"},
-            {tk_ident.get_name(), "^[^\\d\\W]\\w*"}
-        });
+    ahead_lexer lex({tk_op_par, tk_cl_par, tk_ident});
     
     stringstream str("example ( ( word ) ( )\n" 
                      "***)");
 
     lex.set_stream(str);
     auto r = lex.get_token();
-    REQUIRE( r.first == tk_ident.get_name() );
-    REQUIRE( r.second == "example" );
+    CHECK( r.first == tk_ident.get_name() );
+    CHECK( r.second == "example" );
     r = lex.get_token();
-    REQUIRE( r.first == tk_op_par.get_name() );
-    REQUIRE( r.second == "(" );
+    CHECK( r.first == tk_op_par.get_name() );
+    CHECK( r.second == "(" );
     std::string s = lex.extract("(", ")");
     REQUIRE( s == " ( word ) ( )\n***");
+    // check the position
+    CHECK( lex.get_pos().first == 2 );
+    CHECK( lex.get_pos().second == 4 );
 }
 
 TEST_CASE( "Extraction complex", "[lexer]" ) {
@@ -148,17 +147,23 @@ TEST_CASE( "Extraction complex", "[lexer]" ) {
         REQUIRE( r.second == "/*" );
         std::string s = lex.extract("/*", "*/");
         REQUIRE( s == " pluto ");
+        CHECK(lex.get_pos().second == 17);
     }
     
     SECTION( "nesting" ) {
-        stringstream str("/* /* pluto \n*/    */*/");
+        //                0123456789
+        stringstream str("/* /* pluto \n"
+                         "*/    */*/");
 	
         lex.set_stream(str);
         auto r = lex.get_token();
         REQUIRE( r.first == tk_op_par.get_name() );
         REQUIRE( r.second == "/*" );
+        CHECK(lex.get_pos().second == 2);
         std::string s = lex.extract("/*", "*/");
-        REQUIRE( s == " /* pluto \n*/    ");	
+        REQUIRE( s == " /* pluto \n*/    ");
+        CHECK(lex.get_pos().second == 8);
+        
         r = lex.get_token();
         REQUIRE( r.first == tk_cl_par.get_name() );
         REQUIRE( r.second == "*/" );

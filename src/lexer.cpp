@@ -142,6 +142,17 @@ namespace tipa {
         saved_ctx.pop();
     }
 
+    void lexer::advance_start(int n)
+    {
+        while (n>=1) {
+            if (*start == '\t') ncol += 8;
+            else ++ncol;
+            ++start;
+            --n;
+        }
+    }
+    
+    
     void lexer::skip_spaces()
     {
         while (start != curr_line.end()) {
@@ -151,12 +162,10 @@ namespace tipa {
             std::string p(start, start+m);
             std::string q(start, start+n);
 	
-            if (*start == ' ' or *start == '\n') {
-                ++start; ++ncol;
-            } else if (*start == '\t') {
-                ++start; ncol += 8;
-            } else if (m != 0 and comment_begin == p) {
-                start += m;
+            if (*start == ' ' or *start == '\n' or *start == '\t')
+                advance_start();
+            else if (m != 0 and comment_begin == p) {
+                advance_start(m);
                 extract(comment_begin, comment_end);
             } 
             else if (n != 0 and comment_single_line == q)
@@ -221,10 +230,9 @@ namespace tipa {
             if (flag) {
                 string res;
                 copy(start, what[0].second, back_inserter(res));
-                ncol += distance(start, what[0].second);
-                start = what[0].second;
-                // INFO_LINE("get_token(): start now pointing at \"" << *start << "\"");
-                // INFO_LINE("token: " << res);
+                advance_start(distance(start, what[0].second));
+                //ncol += distance(start, what[0].second);
+                //start = what[0].second;
                 return {x.get_name(), res};
                 break;
             }
@@ -245,26 +253,29 @@ namespace tipa {
         std::string result;
 
         for (;;) {
+            // move to the first non empty line
             while (start == curr_line.end()) {
                 if (not next_line()) 
                     throw parse_exc("END OF INPUT WHILE EXTRACTING");
-                //return result;
                 result += "\n";
             }
             std::string s1(start, start + sym_begin.size() );
             std::string s2(start, start + sym_end.size() );
             if (sym_begin != "" and s1 == sym_begin) {
                 result += s1;
-                start += sym_begin.size();
+                advance_start(sym_begin.size());
+                
+                // start += ; ncol += sym_begin.size();
                 result += extract(sym_begin, sym_end) + sym_end;
             } else if (s2 == sym_end) {
-                start += sym_end.size();
+                advance_start(sym_end.size());
+                //start += sym_end.size(); ncol += sym_end.size();
                 return result;
             }
             else {
                 result += *start;
-                start++;
-            }
+                advance_start();
+              }
         }
     }
 }
