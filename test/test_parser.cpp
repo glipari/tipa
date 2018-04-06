@@ -24,6 +24,7 @@
 #include <iterator>
 #include <vector>
 #include <sstream>
+#include <fstream>
 
 #include <tinyparser.hpp>
 
@@ -387,3 +388,37 @@ SCENARIO("Ownership test", "[parser]")
     }
 }
 
+
+TEST_CASE("Repetition from file", "[parser]")
+{
+    rule r_assignement = rule(tk_ident) >> rule('=') >> rule(tk_int);
+    rule root = *r_assignement;
+
+    SECTION("Correct") {
+        ifstream file("parser-test1.txt");
+        parser_context pc;
+        pc.set_stream(file);
+        
+        bool result = parse_all(root, pc);
+        CHECK(result == true);
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 8);
+        CHECK(v[0].second == "var");
+    }
+    SECTION("Incorrect") {
+        ifstream file("parser-test2.txt");
+        parser_context pc;
+        pc.set_stream(file);
+        
+        bool result = parse_all(root, pc);
+        CHECK(result == false);
+
+        CHECK(pc.get_last_token().second == "4567");
+        CHECK(pc.get_error_pos().first == 3);
+        CHECK(pc.get_error_pos().second == 8);
+        
+        // auto v = pc.collect_tokens();
+        // CHECK(v.size() == 8);
+        // CHECK(v[0].second == "var");
+    }
+}

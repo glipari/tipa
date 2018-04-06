@@ -1,0 +1,15 @@
+01234567890123456789012345
+abcde lkfrf
+var = 42
+	var=42
+normal = 42	var = 24
+(extracting)
+	(extracting)
+
+
+
+( extr.			
+	extracting
+		and still extracting
+					)
+The end

@@ -285,6 +285,13 @@ TEST_CASE("save and restore", "[lexer]")
     }
 }
 
+
+TEST_CASE("Save and restore from file", "[lexer]")
+{
+    // TODO
+}
+
+
 TEST_CASE("Skip spaces", "[lexer]") 
 {
     ahead_lexer lex({tk_int, tk_ident});

@@ -23,6 +23,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lexer_multi.txt
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/lexer-test1.txt
     ${CMAKE_CURRENT_BINARY_DIR}/lexer-test1.txt COPYONLY)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/parser-test1.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/parser-test1.txt COPYONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/parser-test2.txt
+    ${CMAKE_CURRENT_BINARY_DIR}/parser-test2.txt COPYONLY)
+
 create_test (TestCollector test_collector.cpp)
 create_test (TestLexer     test_lexer.cpp)
 create_test (TestLexer2    test_lexer2.cpp)
