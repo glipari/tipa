@@ -1,0 +1,76 @@
+* TODO [#A] Fix error messages
+  
+  I think we need to allow the user to customize error messages.
+
+  One solution would be: 
+
+  1) standard, very basic error msg for sequence,
+     alternatives, etc. (like, "unrecognized element in sequence")
+  2) Customizable error messages (like: expecting x). 
+  
+  Of course, we need a better way to signal the point in which the
+  message was found. To do this, I need to:
+
+  1. store the first point at which I find an error
+  2. backtrack
+  3. if this causes an error at a higher level, store the new point,
+     and backtrack until, 
+     - either we find an alternative path: in this case, we just drop
+       the entire stack of errors
+     - or, we reach the top level, in this case we just return "false".
+
+  This is rather urgent, otherwise the parser is almost unusable. 
+
+
+* TODO [#B] Optimizing the graph structure
+
+** Sequences
+
+   Like alternatives, it would be nice to compact a long sequence in a
+   single rule, this simplifies a lot of things.
+
+   How do we do this ? 
+
+   #+begin_src c++
+     rule x = a >> b >> c; 
+   #+end_src
+
+   Currently it is transformed into:
+
+   #+begin_src ditaa :file multi-sequence.png
+     x --> seq --> c 	
+	    |
+	    +--> seq --> a
+		  |
+		  +--> b
+   #+end_src
+
+   I would like to have 
+
+   #+begin_src ditaa :file single-sequence.png
+     x --> seq --> a 
+	    |
+	    +--> b
+	    |
+	    +--> c
+   #+end_src
+
+   To do this during construction I need to do the following:
+   - build a seq_rule
+   - see if one of the two elements is a sequential rule: 
+   - if so, 
+      - take the elements and integrate them directly, at the
+        right position in the vector
+      - delete one of the two elements (thanks to shared pointers, that
+        should be automatic)
+
+   Notice that class =seq_rule= already supports long sequences,
+   because it stores everything in a =vector< WPtr<impl_rule> >=.
+
+
+  
+
+
+
+  
+  
