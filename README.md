@@ -131,7 +131,7 @@ follows:
 	![Figure 4: Same situation as in Fig. 1](./doc/mem1.png)
 
 
-## Change Log
+## Change Log<a id="sec-1"></a> ##
 
 ### 6 april 2018
 
