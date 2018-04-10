@@ -40,8 +40,11 @@ namespace tipa {
     class parser_context {
     public:
         lexer lex;
+        // the collected tokens
         std::vector<token_val> collected;
-        std::stack<unsigned int> ncoll;
+        // do not remember what it is...
+        //std::stack<unsigned int> ncoll;
+        std::stack<std::vector<token_val>> saved;
     
         token_val error_msg;
     public:

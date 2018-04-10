@@ -43,14 +43,14 @@ TEST_CASE( "Collecting two integers", "[collector]")
     
     pair<int, int> result;
     auto f = [&result](parser_context &pc) {
-	auto v = pc.collect_tokens();
-	if (v.size() == 2) { 
-	    result.first = atoi(v[0].second.c_str());
-	    result.second = atoi(v[1].second.c_str());
-	} else 
-	    cout << "Not enough elements" << endl;
+        auto v = pc.collect_tokens();
+        if (v.size() == 2) { 
+            result.first = atoi(v[0].second.c_str());
+            result.second = atoi(v[1].second.c_str());
+        } else 
+            cout << "Not enough elements" << endl;
     }; 
-
+    
     rule op = rule('+') | rule('-');
     rule expr = rule(tk_int) >> op >> rule(tk_int) ;
     
@@ -72,13 +72,13 @@ TEST_CASE( "Collecting n integers", "[collector]")
     vector<int> results;
 
     action_t f = [&results](parser_context &pc) {
-	INFO("Calling the function to collect parameters");
-	auto tv = pc.collect_tokens();
-	for (unsigned int i = 0; i<tv.size(); i++) 
-	    // if (i % 2 == 0)
-		results.push_back(atoi(tv[i].second.c_str()));
-	//results.pop_back();
-	return true;
+        INFO("Calling the function to collect parameters");
+        auto tv = pc.collect_tokens();
+        for (unsigned int i = 0; i<tv.size(); i++) 
+            // if (i % 2 == 0)
+            results.push_back(atoi(tv[i].second.c_str()));
+        //results.pop_back();
+        return true;
     };
 
     vector<int> expect = {1, 2, 3, 4, 5};

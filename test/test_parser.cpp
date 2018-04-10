@@ -161,10 +161,8 @@ TEST_CASE("Null rule", "[parser]")
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
         number[myfunction];
 
-        //cout << "first" << endl;
         pc.set_stream(str1);
         CHECK(parse_all(expr, pc));
-        //cout << "------------------" << endl;
     }
 
     SECTION("0/1 rule with composed rules again") {
@@ -422,3 +420,82 @@ TEST_CASE("Repetition from file", "[parser]")
         // CHECK(v[0].second == "var");
     }
 }
+
+
+TEST_CASE("Optional", "[parser]")
+{
+    rule a = keyword("xxx", false) >> rule(tk_int);
+    rule b = keyword("yyy");
+    rule expr = rule('{') >> -a >> -b >> rule('}');
+
+    SECTION ("First ok, second missing") {
+        stringstream str("{ xxx 34 }");
+        parser_context pc;
+        pc.set_stream(str);
+        bool result = parse_all(expr, pc);
+        REQUIRE(result);
+        auto v = pc.collect_tokens();
+        REQUIRE(v.size() == 1);
+        //CHECK(v.at(0).second == "xxx");
+        CHECK(v.at(0).second == "34");
+    }
+    SECTION("First missing, second ok") {
+        stringstream str("{ yyy }");
+        parser_context pc;
+        pc.set_stream(str);
+        bool result = parse_all(expr, pc);
+        CHECK(result);
+        auto v = pc.collect_tokens();
+        REQUIRE(v.size() == 1);
+        CHECK(v[0].second == "yyy");
+    }
+    SECTION("Both missing") {
+        stringstream str("{ }");
+        parser_context pc;
+        pc.set_stream(str);
+        bool result = parse_all(expr, pc);
+        CHECK(result);
+        auto v = pc.collect_tokens();
+        CHECK(v.size() == 0);
+    }
+    SECTION("Both present") {
+        stringstream str("{ xxx 34 yyy }");
+        parser_context pc;
+        pc.set_stream(str);
+        bool result = parse_all(expr, pc);
+        CHECK(result);
+        auto v = pc.collect_tokens();
+        REQUIRE(v.size() == 2);
+        CHECK(v.at(0).second == "34");
+        CHECK(v.at(1).second == "yyy");        
+    }
+}
+
+// TEST_CASE("Optional with repetition", "[parser]")
+// {
+//     rule a = keyword("xxx") >> rule(tk_int);
+//     rule b = keyword("yyy");
+//     rule expr = rule('{') >> -a >> -b >> rule('}');
+
+//     SECTION ("First ok, second missing") {
+//         stringstream str("{ xxx 34}");
+//         parser_context pc;
+//         pc.set_stream(str);
+//         bool result = parse_all(expr, pc);
+//         CHECK(result);
+//     }
+//     SECTION("First missing, second ok") {
+//         stringstream str("{ yyy }");
+//         parser_context pc;
+//         pc.set_stream(str);
+//         bool result = parse_all(expr, pc);
+//         CHECK(result);
+//     }
+//     SECTION("Both missing") {
+//         stringstream str("{ }");
+//         parser_context pc;
+//         pc.set_stream(str);
+//         bool result = parse_all(expr, pc);
+//         CHECK(result);
+//     }
+// }

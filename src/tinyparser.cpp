@@ -51,7 +51,9 @@ namespace tipa {
     {
         lex.set_stream(in);
         collected.clear();
-        while (!ncoll.empty()) ncoll.pop();
+        //saved.clear();
+        while (!saved.empty()) saved.pop();
+        //while (!ncoll.empty()) ncoll.pop();
     }
 
     void parser_context::set_comment(const std::string &comment_begin, 
@@ -84,32 +86,35 @@ namespace tipa {
 
     void parser_context::push_token(const std::string &s)
     {
-        collected.push_back({/*LEX_EXTRACTED_STRING*/tk_extracted.get_name(), s});
+        collected.push_back({tk_extracted.get_name(), s});
     }
 
     void parser_context::save() 
     {
         lex.save();
-        ncoll.push(collected.size());
+        saved.push(collected);
     }
 
     void parser_context::restore()
     {
         lex.restore();
-        unsigned lev = ncoll.top();
-        ncoll.pop();
-        while (lev != collected.size()) collected.pop_back();
+        if (saved.size() < 1) throw "parser_context::restore() on an empty stack !!!" ;
+        collected = saved.top();
+        saved.pop();
     }
  
     void parser_context::discard_saved()
     {
         lex.discard_saved();
-        ncoll.pop();
+        //ncoll.pop();
+        if (saved.size() < 1) throw "parser_context::discard_saved() on an empty stack !!!" ;
+        saved.pop();
     }
 
     token_val parser_context::get_last_token()
     {
-        return collected[collected.size()-1];
+        if (collected.size() < 1) throw "parser_context::get_last_token(): there is no token!!";
+        else return collected[collected.size()-1];
     }
 
 
@@ -462,7 +467,9 @@ namespace tipa {
             else {
                 throw parse_exc("seq_parse: weak pointer error!");
             }
-        }    
+        }
+        // everything is ok, return true
+        pc.discard_saved();
         INFO_LINE(" ** ok ");
         return true;
     }
@@ -773,8 +780,9 @@ namespace tipa {
     class keyword_rule : public abs_rule {
         std::string kw;
         term_rule rl;
+        bool collect_flag;
     public:
-        keyword_rule(const std::string &key, bool collect) : kw(key), rl(tk_ident, collect) {}
+        keyword_rule(const std::string &key, bool collect) : kw(key), rl(tk_ident, true), collect_flag(collect) {}
 
         virtual bool parse(parser_context &pc) const;
         virtual std::string print(av_set &av);
@@ -784,8 +792,11 @@ namespace tipa {
     {
         pc.save();
         bool flag = rl.parse(pc);
+        
         if (flag && pc.get_last_token().second == kw) {
             pc.discard_saved();
+            // if I do not wish to collect this token, I remove it from the pc. 
+            if (!collect_flag) pc.collect_tokens(1);
             return true;
         }
         else {
