@@ -3,7 +3,7 @@ TiPa : a Tiny Parser in C++
 
 Author: Giuseppe Lipari (giuseppe.lipari@univ-lille1.fr)
 
-Version : 0.2 (alpha)
+Version : 0.21 (alpha) (2018-04-11)
 
 ## Table of contents ## 
 
@@ -132,6 +132,11 @@ follows:
 
 
 ## Change Log<a id="sec-1"></a> ##
+
+## ???
+
+- Version number 0.3 (alpha)
+- I removed the strict sequence rule, it is probably superflous
 
 ### 6 april 2018
 
