@@ -70,7 +70,7 @@ TEST_CASE("Position in file", "[lexer]")
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));
     CHECK(lex.get_pos().first == 2);
-    CHECK(lex.get_pos().second == 5);
+    CHECK(lex.get_pos().second == 6);
 
     // lkfrf
     t = lex.get_token();
@@ -82,19 +82,19 @@ TEST_CASE("Position in file", "[lexer]")
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));
     CHECK(lex.get_pos().first == 3);
-    CHECK(lex.get_pos().second == 3);
+    CHECK(lex.get_pos().second == 4);
 
     // = 
     t = lex.get_token();
     CHECK(tk_eq.is_instance(t));
     CHECK(lex.get_pos().first == 3);
-    CHECK(lex.get_pos().second == 5);
+    CHECK(lex.get_pos().second == 6);
 
     // 42
     t = lex.get_token();
     CHECK(tk_int.is_instance(t));
     CHECK(lex.get_pos().first == 4);
-    CHECK(lex.get_pos().second == 0);
+    CHECK(lex.get_pos().second == 8);
 
     // var
     t = lex.get_token();
@@ -118,19 +118,19 @@ TEST_CASE("Position in file", "[lexer]")
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));
     CHECK(lex.get_pos().first == 5);
-    CHECK(lex.get_pos().second == 6);
+    CHECK(lex.get_pos().second == 7);
 
     // =
     t = lex.get_token();
     CHECK(tk_eq.is_instance(t));
     CHECK(lex.get_pos().first == 5);
-    CHECK(lex.get_pos().second == 8);
+    CHECK(lex.get_pos().second == 9);
 
     // 42
     t = lex.get_token();
     CHECK(tk_int.is_instance(t));
     CHECK(lex.get_pos().first == 5);
-    CHECK(lex.get_pos().second == 11);
+    CHECK(lex.get_pos().second == 16);
 
     CHECK(not lex.eof());
 
@@ -143,13 +143,13 @@ TEST_CASE("Position in file", "[lexer]")
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));
     CHECK(lex.get_pos().first == 5);
-    CHECK(lex.get_pos().second == 19);
+    CHECK(lex.get_pos().second == 20);
 
     // =
     t = lex.get_token();
     CHECK(tk_eq.is_instance(t));
     CHECK(lex.get_pos().first == 5);
-    CHECK(lex.get_pos().second == 21);
+    CHECK(lex.get_pos().second == 22);
 
     // 42
     t = lex.get_token();
@@ -165,8 +165,8 @@ TEST_CASE("Position in file", "[lexer]")
     
     auto s = lex.extract("(", ")");
     CHECK(s == "extracting");
-    CHECK(lex.get_pos().first == 7);
-    CHECK(lex.get_pos().second == 0);
+    CHECK(lex.get_pos().first == 6);
+    CHECK(lex.get_pos().second == 12);
 
     CHECK(not lex.eof());
     CHECK(lex.get_pos().first == 7);
@@ -180,18 +180,18 @@ TEST_CASE("Position in file", "[lexer]")
     
     s = lex.extract("(", ")");
     CHECK(s == "extracting");
-    CHECK(lex.get_pos().first == 8);
-    CHECK(lex.get_pos().second == 0);
+    CHECK(lex.get_pos().first == 7);
+    CHECK(lex.get_pos().second == 20);
 
     // (
     t = lex.get_token();
     CHECK(tk_op_par.is_instance(t));
     CHECK(lex.get_pos().first == 11);
-    CHECK(lex.get_pos().second == 1);
+    CHECK(lex.get_pos().second == 2);
 
     s = lex.extract("(", ")");
-    CHECK(lex.get_pos().first == 15);
-    CHECK(lex.get_pos().second == 0);
+    CHECK(lex.get_pos().first == 14);
+    CHECK(lex.get_pos().second == 41);
 
     CHECK(not lex.eof());
 
@@ -201,7 +201,7 @@ TEST_CASE("Position in file", "[lexer]")
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));
     CHECK(lex.get_pos().first == 15);
-    CHECK(lex.get_pos().second == 3);
+    CHECK(lex.get_pos().second == 4);
     // end
     t = lex.get_token();
     CHECK(tk_ident.is_instance(t));

@@ -409,9 +409,9 @@ TEST_CASE("Repetition from file", "[parser]")
         CHECK(result == false);
 
         CHECK(pc.get_last_token().second == "4567");
-        CHECK(pc.get_last_error().position.first == 2);
-        CHECK(pc.get_last_error().position.second == 11);
-        cout << pc.get_formatted_err_msg() << endl;
+        CHECK(pc.get_last_error().position.first == 3);
+        CHECK(pc.get_last_error().position.second == 8);
+        //cout << pc.get_formatted_err_msg() << endl;
     }
 }
 

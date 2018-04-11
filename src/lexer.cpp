@@ -91,20 +91,15 @@ namespace tipa {
     
     bool lexer::next_line()
     {
-        INFO_LINE("Next line");
         if (nline == all_lines.size()) {
             if (p_input->eof()) {
-                INFO_LINE("No more lines to process");
                 return false;
             }
             getline(*p_input, curr_line);
             all_lines.push_back(curr_line);
-        } else if (nline > all_lines.size()) { 
-            throw parse_exc("Lexer: exceeding all_lines array lenght!");
         } else {
-            INFO_LINE("Going ahead again!");
-            INFO_LINE(curr_line);
-            INFO_LINE(all_lines[nline]);
+            if (nline > all_lines.size())
+                throw parse_exc("Lexer: exceeding all_lines array lenght!");
         }
     
         nline++;
@@ -113,7 +108,6 @@ namespace tipa {
         start = curr_line.begin();	
         return true;
     }
-
 
     void lexer::save() 
     {
@@ -155,76 +149,79 @@ namespace tipa {
     }
     
     
-    void lexer::skip_spaces()
+    bool lexer::skip_spaces()
     {
-        while (start != curr_line.end()) {
-            int d = std::distance(start, curr_line.end());
-            int m = std::min((int)comment_begin.size(), d);
-            int n = std::min((int)comment_single_line.size(), d);
-            std::string p(start, start+m);
-            std::string q(start, start+n);
-	
-            if (*start == ' ' or *start == '\t')
-                advance_start();
-            else if (m != 0 and comment_begin == p) {
-                advance_start(m);
-                extract(comment_begin, comment_end);
-            } 
-            else if (n != 0 and comment_single_line == q)
-                extract_line();
-            else break;
+        while(true) {            
+            if (start == curr_line.end()) {
+                bool f = next_line();
+                // if eof, return
+                if (!f) return false;
+            }
+            else {
+                int d = std::distance(start, curr_line.end());
+                int m = std::min((int)comment_begin.size(), d);
+                int n = std::min((int)comment_single_line.size(), d);
+                std::string p(start, start+m);
+                std::string q(start, start+n);
+                
+                if (*start == ' ' or *start == '\t') 
+                    advance_start();
+                else if (m != 0 and comment_begin == p) {
+                    advance_start(m);
+                    extract(comment_begin, comment_end);
+                } 
+                else if (n != 0 and comment_single_line == q)
+                    extract_line();
+                else break;
+            }
         }
+        return true;
+        
+        // while (start != curr_line.end()) {
+        //     int d = std::distance(start, curr_line.end());
+        //     int m = std::min((int)comment_begin.size(), d);
+        //     int n = std::min((int)comment_single_line.size(), d);
+        //     std::string p(start, start+m);
+        //     std::string q(start, start+n);
+	
+        //     if (*start == ' ' or *start == '\t')
+        //         advance_start();
+        //     else if (m != 0 and comment_begin == p) {
+        //         advance_start(m);
+        //         extract(comment_begin, comment_end);
+        //     } 
+        //     else if (n != 0 and comment_single_line == q)
+        //         extract_line();
+        //     else break;
+        // }
     }
 
 
     token_val lexer::try_token(const token &x)
     {
-        //static boost::match_results<std::string::iterator> what;
         static std::match_results<std::string::iterator> what;
-        skip_spaces(); 
 
-        while (start == curr_line.end() or *start == 0) {
-            if (not next_line()) return { LEX_ERROR, "EOF" };
-            skip_spaces();
-        }
-
-        INFO_LINE("try_token(): start is at <" << *start << ">");
-
-        INFO_LINE(curr_line);
-        INFO_LINE(std::setw(ncol) << "^");
+        if (not skip_spaces()) return { LEX_ERROR, "EOF" }; 
 
         std::regex expr(x.get_expr());
         auto flag = std::regex_search(start, curr_line.end(), what, expr, 
                                       std::regex_constants::match_continuous);
 
-        INFO_LINE("Regex_search completed");
         if (flag) {
             string res;
             copy(start, what[0].second, back_inserter(res));
-            ncol += distance(start, what[0].second);
-            start = what[0].second;
-            // I immediately move to the beginning of next token
+            advance_start(distance(start, what[0].second));
             skip_spaces();
             return token_val(x.get_name(), res);
         }
-        INFO_LINE("Token does not match");
-        return { LEX_ERROR, "Token does not match" };
+        else return { LEX_ERROR, "Token does not match" };
     }
 
     std::pair<token_id, std::string> ahead_lexer::get_token()
     {
         static std::match_results<std::string::iterator> what;
 
-        skip_spaces(); 
-
-        while (start == curr_line.end() or *start == 0) {
-            if (not next_line()) return { LEX_ERROR, "EOF" };
-            skip_spaces();
-        }
-
-        INFO_LINE("get_token(): start is at \"" << *start << "\"");
-        INFO_LINE(curr_line);
-        INFO_LINE(std::setw(ncol) << "^");
+        if (not skip_spaces()) return { LEX_ERROR, "EOF" }; 
 
         // try to identify which token
         for (auto x : array) {
@@ -235,20 +232,17 @@ namespace tipa {
                 string res;
                 copy(start, what[0].second, back_inserter(res));
                 advance_start(distance(start, what[0].second));
-                //ncol += distance(start, what[0].second);
-                //start = what[0].second;
+                skip_spaces();
                 return {x.get_name(), res};
-                break;
             }
         }
-        INFO_LINE("token not found");
         return { LEX_ERROR, "Unknown token" };
     }
 
     std::string lexer::extract_line()
     {
         std::string s(start, curr_line.end());
-        next_line();
+        next_line(); skip_spaces();
         return s;
     }
 
@@ -271,6 +265,7 @@ namespace tipa {
                 result += extract(sym_begin, sym_end) + sym_end;
             } else if (s2 == sym_end) {
                 advance_start(sym_end.size());
+                //skip_spaces();
                 return result;
             }
             else {

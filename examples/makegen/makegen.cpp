@@ -12,7 +12,6 @@
 using namespace std;
 using namespace tipa;
 
-
 /*
   Example of language:
 
@@ -23,7 +22,7 @@ using namespace tipa;
     exec { name {exec_name} srcs {file.cpp}, lib {-lrt} }
 
   It generates the corresponding makefile.
- */
+*/
 
 int main(int argc, const char *argv[])
 {
@@ -95,7 +94,6 @@ int main(int argc, const char *argv[])
     stringstream str("global { cxxflags { -Wall -std=c++14 } } \n\n"
                      "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
                      "exec { name {tool} srcs {tool.cpp, share.cpp} }");
-    
     
     if (argc == 1) {
         pc.set_stream(str);

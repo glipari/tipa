@@ -143,7 +143,7 @@ namespace tipa {
         std::string comment_single_line;
 
         bool next_line();
-        void skip_spaces();
+        bool skip_spaces();
         void advance_start(int n=1);
         
     public:

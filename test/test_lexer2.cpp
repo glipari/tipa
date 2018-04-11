@@ -122,7 +122,7 @@ TEST_CASE( "Extraction simple", "[lexer]" ) {
     CHECK( r.first == tk_op_par.get_name() );
     CHECK( r.second == "(" );
     std::string s = lex.extract("(", ")");
-    REQUIRE( s == " ( word ) ( )\n***");
+    REQUIRE( s == "( word ) ( )\n***");
     // check the position
     CHECK( lex.get_pos().first == 2 );
     CHECK( lex.get_pos().second == 4 );
@@ -146,7 +146,7 @@ TEST_CASE( "Extraction complex", "[lexer]" ) {
         REQUIRE( r.first == tk_op_par.get_name() );
         REQUIRE( r.second == "/*" );
         std::string s = lex.extract("/*", "*/");
-        REQUIRE( s == " pluto ");
+        REQUIRE( s == "pluto ");
         CHECK(lex.get_pos().second == 17);
     }
     
@@ -159,9 +159,9 @@ TEST_CASE( "Extraction complex", "[lexer]" ) {
         auto r = lex.get_token();
         REQUIRE( r.first == tk_op_par.get_name() );
         REQUIRE( r.second == "/*" );
-        CHECK(lex.get_pos().second == 2);
+        CHECK(lex.get_pos().second == 3);
         std::string s = lex.extract("/*", "*/");
-        REQUIRE( s == " /* pluto \n*/    ");
+        REQUIRE( s == "/* pluto \n*/    ");
         CHECK(lex.get_pos().second == 8);
         
         r = lex.get_token();
