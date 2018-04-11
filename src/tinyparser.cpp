@@ -138,9 +138,16 @@ namespace tipa {
         return v;
     }
         
-    void parser_context::set_error(const token_val &err_msg)
+    void parser_context::set_error(const token_val &tk, const std::string &err_msg)
     {
-        error_msg = err_msg;
+        //error_msg = err_msg;
+        error_message em = {
+            .msg = err_msg,
+            .position = lex.get_pos(),
+            .token = tk,
+            .line = lex.get_currline()
+        };
+        error_stack.push(em);
     }
 
     bool parser_context::eof()
@@ -151,13 +158,17 @@ namespace tipa {
     std::string parser_context::get_formatted_err_msg()
     {
         std::stringstream err;
-        err << "At line " << lex.get_pos().first 
-            << ", column " << lex.get_pos().second << std::endl;
-        err << lex.get_currline() << std::endl;    
-        for (int i=0; i<lex.get_pos().second-1; ++i) err << " ";
-        err << "^" << std::endl;
-        err << "Error code: " << error_msg.first << std::endl;
-        err << "Error msg : " << error_msg.second << std::endl; 
+        while (!error_stack.empty()) {
+            auto em = error_stack.top();
+            err << "At line " << em.position.first 
+                << ", column " << em.position.second << ":" << std::endl;
+            err << em.line << std::endl;    
+            for (int i=0; i<em.position.second-1; ++i) err << "-";
+            err << "^" << std::endl;
+            err << "Error " << -em.token.first << ": " << em.msg << std::endl;
+
+            error_stack.pop();
+        }
         return err.str();
     }
 
@@ -394,7 +405,7 @@ namespace tipa {
             return true;
         } else {
             INFO_LINE(" ** FALSE");
-            pc.set_error(result);
+            pc.set_error(result, "Terminal rule failed");
             return false;
         }
     }
@@ -454,9 +465,12 @@ namespace tipa {
         for (auto &x : rl) {
             if (auto spt = x.get()) {
                 if (!spt->parse(pc)) {
-                    if (pc.get_error_string() == "EOF" && i == 0) return false; 
+                    if (pc.get_error_string() == "EOF" && i == 0) {
+                        pc.set_error({ERR_PARSE_SEQ, "Unexpected end of file"}, "Sequential rule rule failed");
+                        return false;
+                    }
                     else {
-                        pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+                        pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"}, "Sequential rule failed");
                         INFO_LINE(" ** FALSE ");
                         pc.restore();
                         return false;
@@ -567,6 +581,7 @@ namespace tipa {
             if (auto spt = x.get()) {
                 if (spt->parse(pc)) {
                     INFO_LINE(" ** ok");
+                    pc.empty_error_stack();
                     return true;
                 }
             }
@@ -574,7 +589,7 @@ namespace tipa {
                 throw parse_exc("alt_rule: undefined weak pointer");
             }
 
-        pc.set_error({ERR_PARSE_ALT, "None of the alternatives parsed correctly"});
+        pc.set_error({ERR_PARSE_ALT, "None of the alternatives parsed correctly"}, "Alternative rule failed");
         INFO_LINE(" ** FALSE");
         return false;
     }
@@ -697,6 +712,8 @@ namespace tipa {
        correctly. If so, then returns ok, otherwise it is an error.
 
        And the repetion rule just returns true ALWAYS. 
+
+       Q: What about the error stack ? 
      */
     bool rep_rule::parse(parser_context &pc) const
     {

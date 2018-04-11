@@ -49,9 +49,6 @@ TEST_CASE( "Two terminals, separated by addition symbol", "[parser]")
     pc.set_stream(str);
 
     CHECK(parse_all(expr,pc));
-    // cout << "ERROR: " << pc.get_error_string() << endl;
-    // print_tokens(pc);
-    // cout << "eof : " << pc.eof() << endl;
 }
 
 TEST_CASE( "Addition / subtraction", "[parser]")
@@ -412,12 +409,9 @@ TEST_CASE("Repetition from file", "[parser]")
         CHECK(result == false);
 
         CHECK(pc.get_last_token().second == "4567");
-        CHECK(pc.get_error_pos().first == 3);
-        CHECK(pc.get_error_pos().second == 8);
-        
-        // auto v = pc.collect_tokens();
-        // CHECK(v.size() == 8);
-        // CHECK(v[0].second == "var");
+        CHECK(pc.get_last_error().position.first == 2);
+        CHECK(pc.get_last_error().position.second == 11);
+        cout << pc.get_formatted_err_msg() << endl;
     }
 }
 

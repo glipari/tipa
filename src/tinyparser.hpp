@@ -39,6 +39,14 @@ namespace tipa {
      */
     class parser_context {
     public:
+        struct error_message {
+            std::string msg;
+            std::pair<int, int> position;
+            token_val token;
+            std::string line;
+        };
+
+    private:
         lexer lex;
         // the collected tokens
         std::vector<token_val> collected;
@@ -46,7 +54,9 @@ namespace tipa {
         //std::stack<unsigned int> ncoll;
         std::stack<std::vector<token_val>> saved;
     
-        token_val error_msg;
+        //token_val error_msg;
+        std::stack<error_message> error_stack;
+        
     public:
         parser_context(); 
 
@@ -66,13 +76,14 @@ namespace tipa {
         // reads the last token
         token_val get_last_token();
 
-        void set_error(const token_val &err_msg);
-        int  get_error_code() const { return error_msg.first; }
-
-        std::string get_error_string() const { return error_msg.second; }
+        void set_error(const token_val &tk, const std::string &err_msg);
+        void empty_error_stack() { while (!error_stack.empty()) error_stack.pop(); }
+        error_message  get_last_error() const { if (!error_stack.empty()) return error_stack.top(); else return error_message();}
+        
+        std::string get_error_string() const { if (!error_stack.empty()) return error_stack.top().token.second; else return "";}
         std::string get_formatted_err_msg();
         bool eof();
-        std::pair<int, int> get_error_pos() const { return lex.get_pos(); }
+        //std::pair<int, int> get_error_pos() const { return lex.get_pos(); } // TODO: should it be private ?
 
         void push_token(token_val tk);
         void push_token(const std::string &s);

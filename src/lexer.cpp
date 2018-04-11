@@ -145,10 +145,11 @@ namespace tipa {
     void lexer::advance_start(int n)
     {
         while (n>=1) {
-            if (*start == '\t') //ncol += 8;
+            if (*start == '\t')
                 ncol = (1+(ncol/8))*8;
             else ++ncol;
             ++start;
+            //if (start == curr_line.end()) next_line();
             --n;
         }
     }
@@ -163,7 +164,7 @@ namespace tipa {
             std::string p(start, start+m);
             std::string q(start, start+n);
 	
-            if (*start == ' ' or *start == '\n' or *start == '\t')
+            if (*start == ' ' or *start == '\t')
                 advance_start();
             else if (m != 0 and comment_begin == p) {
                 advance_start(m);
@@ -202,6 +203,8 @@ namespace tipa {
             copy(start, what[0].second, back_inserter(res));
             ncol += distance(start, what[0].second);
             start = what[0].second;
+            // I immediately move to the beginning of next token
+            skip_spaces();
             return token_val(x.get_name(), res);
         }
         INFO_LINE("Token does not match");
@@ -258,25 +261,22 @@ namespace tipa {
             while (start == curr_line.end()) {
                 if (not next_line()) 
                     throw parse_exc("END OF INPUT WHILE EXTRACTING");
-                result += "\n";
+                result += '\n';
             }
             std::string s1(start, start + sym_begin.size() );
             std::string s2(start, start + sym_end.size() );
             if (sym_begin != "" and s1 == sym_begin) {
                 result += s1;
                 advance_start(sym_begin.size());
-                
-                // start += ; ncol += sym_begin.size();
                 result += extract(sym_begin, sym_end) + sym_end;
             } else if (s2 == sym_end) {
                 advance_start(sym_end.size());
-                //start += sym_end.size(); ncol += sym_end.size();
                 return result;
             }
             else {
                 result += *start;
                 advance_start();
-              }
+            }
         }
     }
 }

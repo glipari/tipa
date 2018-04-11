@@ -89,18 +89,19 @@ int main(int argc, const char *argv[])
                 all_execs.push_back(exec);
             })];
 
-    parser_context pc; 
-
+    parser_context pc;
+    
+    ifstream fstr;
+    stringstream str("global { cxxflags { -Wall -std=c++14 } } \n\n"
+                     "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
+                     "exec { name {tool} srcs {tool.cpp, share.cpp} }");
+    
+    
     if (argc == 1) {
-        stringstream str("global { cxxflags { -Wall -std=c++14 } } exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }" //);
-                         "exec { name {tool} srcs {tool.cpp, share.cpp} }  ");
-        //stringstream str("exec { name {prog} srcs {prog.cpp, share.cpp} } exec { name {tool} srcs {tool.c, other.cpp}}");
-        //stringstream str("global { cxxflags { pippo } }");
-        //stringstream str("global { libflags { ciao } }");
         pc.set_stream(str);
     }
     else {
-        ifstream fstr(argv[1]);
+        fstr.open(argv[1]);
         pc.set_stream(fstr);
     }
     
