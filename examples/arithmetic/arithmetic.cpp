@@ -127,13 +127,13 @@ int main()
     
     // An expression is sequence of terms separated by + or -
     expr = term >> *(op_plus | op_minus);
-    op_plus = rule('+') > term;    
-    op_minus = rule('-') > term;
+    op_plus = rule('+') >> term;    
+    op_minus = rule('-') >> term;
 
     // A term is a sequence of primaries, separated by * or /
     term = primary >> *(op_mult | op_div);
-    op_mult = rule('*') > primary;
-    op_div = rule('/') > primary;
+    op_mult = rule('*') >> primary;
+    op_div = rule('/') >> primary;
 
     // A primary is either an integer or an expression within parenthesis
     primary = r_int | r_var |

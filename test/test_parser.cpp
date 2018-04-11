@@ -157,7 +157,7 @@ TEST_CASE("Null rule", "[parser]")
     SECTION("0/1 rule with composed rules") {
         stringstream str1("pippo { 12 } pluto");
 
-        rule number = rule('{') > rule(tk_int) > rule('}');
+        rule number = rule('{') >> rule(tk_int) >> rule('}');
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
         number[myfunction];
 
@@ -169,7 +169,7 @@ TEST_CASE("Null rule", "[parser]")
         stringstream str2("pippo pluto");
         stringstream str3("pippo { } pluto");
 
-        rule number = rule('{') >> rule(tk_int) > rule('}');
+        rule number = rule('{') >> rule(tk_int) >> rule('}');
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
         number [myfunction];
 
@@ -470,32 +470,3 @@ TEST_CASE("Optional", "[parser]")
         CHECK(v.at(1).second == "yyy");        
     }
 }
-
-// TEST_CASE("Optional with repetition", "[parser]")
-// {
-//     rule a = keyword("xxx") >> rule(tk_int);
-//     rule b = keyword("yyy");
-//     rule expr = rule('{') >> -a >> -b >> rule('}');
-
-//     SECTION ("First ok, second missing") {
-//         stringstream str("{ xxx 34}");
-//         parser_context pc;
-//         pc.set_stream(str);
-//         bool result = parse_all(expr, pc);
-//         CHECK(result);
-//     }
-//     SECTION("First missing, second ok") {
-//         stringstream str("{ yyy }");
-//         parser_context pc;
-//         pc.set_stream(str);
-//         bool result = parse_all(expr, pc);
-//         CHECK(result);
-//     }
-//     SECTION("Both missing") {
-//         stringstream str("{ }");
-//         parser_context pc;
-//         pc.set_stream(str);
-//         bool result = parse_all(expr, pc);
-//         CHECK(result);
-//     }
-// }

@@ -839,83 +839,83 @@ namespace tipa {
    A sequence of rules to be evaluated in order. 
    I expect that they match one after the other. 
 */
-    class strict_seq_rule : public seq_rule {
-    public:
+    // class strict_seq_rule : public seq_rule {
+    // public:
 
-        strict_seq_rule(rule &a, rule &b);
-        strict_seq_rule(rule &&a, rule &b);
-        strict_seq_rule(rule &a, rule &&b);
-        strict_seq_rule(rule &&a, rule &&b);
+    //     strict_seq_rule(rule &a, rule &b);
+    //     strict_seq_rule(rule &&a, rule &b);
+    //     strict_seq_rule(rule &a, rule &&b);
+    //     strict_seq_rule(rule &&a, rule &&b);
 
-        virtual bool parse(parser_context &pc) const; 
-    };
+    //     virtual bool parse(parser_context &pc) const; 
+    // };
 
-    strict_seq_rule::strict_seq_rule(rule &a, rule &b) : seq_rule(a, b)
-    {
-    }
+    // strict_seq_rule::strict_seq_rule(rule &a, rule &b) : seq_rule(a, b)
+    // {
+    // }
 
-    strict_seq_rule::strict_seq_rule(rule &&a, rule &b) : seq_rule(std::move(a), b)
-    {
-    }
+    // strict_seq_rule::strict_seq_rule(rule &&a, rule &b) : seq_rule(std::move(a), b)
+    // {
+    // }
 
-    strict_seq_rule::strict_seq_rule(rule &a, rule &&b) : seq_rule(a, std::move(b))
-    {
-    }
+    // strict_seq_rule::strict_seq_rule(rule &a, rule &&b) : seq_rule(a, std::move(b))
+    // {
+    // }
 
-    strict_seq_rule::strict_seq_rule(rule &&a, rule &&b) : seq_rule(std::move(a), std::move(b))
-    {
-    }
+    // strict_seq_rule::strict_seq_rule(rule &&a, rule &&b) : seq_rule(std::move(a), std::move(b))
+    // {
+    // }
 
-    bool strict_seq_rule::parse(parser_context &pc) const
-    {
-        INFO("strict_seq_rule::parse()");
+    // bool strict_seq_rule::parse(parser_context &pc) const
+    // {
+    //     INFO("strict_seq_rule::parse()");
 
-        int i = 0;
-        for (auto &x : rl) {
-            if (auto spt = x.get()) {
-                if (!spt->parse(pc)) {
-                    pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
-                    INFO_LINE(" ** FALSE ");
-                    if (i==0) return false;
-                    else throw parse_exc("Error in strict sequence (after first)");
-                }
-                i++;
-            }
-            else {
-                throw parse_exc("strict_seq_rule: unvalid weak pointer");
-            }
-        }    
+    //     int i = 0;
+    //     for (auto &x : rl) {
+    //         if (auto spt = x.get()) {
+    //             if (!spt->parse(pc)) {
+    //                 pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
+    //                 INFO_LINE(" ** FALSE ");
+    //                 if (i==0) return false;
+    //                 else throw parse_exc("Error in strict sequence (after first)");
+    //             }
+    //             i++;
+    //         }
+    //         else {
+    //             throw parse_exc("strict_seq_rule: unvalid weak pointer");
+    //         }
+    //     }    
 
-        INFO_LINE(" ** ok ");
-        return true;
-    }
+    //     INFO_LINE(" ** ok ");
+    //     return true;
+    // }
 
-    rule operator>(rule &a, rule &b)
-    {
-        INFO_LINE("sseq operator: &a and &b");
+    // rule operator>(rule &a, rule &b)
+    // {
+    //     INFO_LINE("sseq operator: &a and &b");
 
-        auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
-        return rule(s);
-    }
-    rule operator>(rule &&a, rule &b)
-    {
-        INFO_LINE("sseq operator: &&a and &b");
-        auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),b));
-        return rule(s);
-    }
-    rule operator>(rule &a, rule &&b)
-    {
-        INFO_LINE("sseq operator: &a and &&b");
+    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
+    //     return rule(s);
+    // }
+    // rule operator>(rule &&a, rule &b)
+    // {
+    //     INFO_LINE("sseq operator: &&a and &b");
+    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),b));
+    //     return rule(s);
+    // }
+    // rule operator>(rule &a, rule &&b)
+    // {
+    //     INFO_LINE("sseq operator: &a and &&b");
 
-        auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,std::move(b)));
-        return rule(s);
-    }
-    rule operator>(rule &&a, rule &&b)
-    {
-        INFO_LINE("sseq operator: &&a and &&b");
-        auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),std::move(b)));
-        return rule(s);
-    }
+    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,std::move(b)));
+    //     return rule(s);
+    // }
+    // rule operator>(rule &&a, rule &&b)
+    // {
+    //     INFO_LINE("sseq operator: &&a and &&b");
+    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),std::move(b)));
+    //     return rule(s);
+    // }
 
     rule null()
     {
@@ -963,7 +963,6 @@ namespace tipa {
   The stack would be cleaned when we can proceed. 
 
   The only rule that can cause such a problem is the alternation. So,
-  it is the alernation that must clean the stack is one good
+  it is the alternation that must clean the stack if one good
   alternative if found.
-
 */

@@ -195,11 +195,11 @@ int main()
     rule root_rule, root_name, plist, pnode, pleaf;
 
     // rules
-    root_rule = root_name >> rule('{') > plist > rule('}');
+    root_rule = root_name >> rule('{') >> plist >> rule('}');
     root_name = rule(tk_ident);
     plist = *pnode;
     pnode = pleaf | root_rule;
-    pleaf = rule(tk_ident) >> rule(':') > rule(tk_ident) > rule(';');
+    pleaf = rule(tk_ident) >> rule(':') >> rule(tk_ident) >> rule(';');
 
     // the tree builder
     PropertyBuilder b;

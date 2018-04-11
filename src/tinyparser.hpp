@@ -143,11 +143,11 @@ namespace tipa {
     rule operator>>(rule &a, rule &&b);
     rule operator>>(rule &&a, rule &&b);
 
-    /** Sequence of rules (no backtrack) */
-    rule operator>(rule &a, rule &b);
-    rule operator>(rule &&a, rule &b);
-    rule operator>(rule &a, rule &&b);
-    rule operator>(rule &&a, rule &&b);
+    // /** Sequence of rules (no backtrack) */
+    // rule operator>(rule &a, rule &b);
+    // rule operator>(rule &&a, rule &b);
+    // rule operator>(rule &a, rule &&b);
+    // rule operator>(rule &&a, rule &&b);
 
     /** Alternation of rules */
     rule operator|(rule &a, rule &b);
