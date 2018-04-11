@@ -138,6 +138,7 @@ follows:
 - Version number 0.3 (alpha)
 - I removed the strict sequence rule, it is probably superflous
 - More decent error messages (with backtracking)
+- I eliminated error messages from lexer. 
 
 ### 6 april 2018
 
