@@ -3,12 +3,15 @@ TiPa : a Tiny Parser in C++
 
 Author: Giuseppe Lipari (giuseppe.lipari@univ-lille1.fr)
 
+Version : 0.2 (alpha)
+
 ## Table of contents ## 
 
 <ol>
 <li><a href="#sec-1">Introduction</a></li>
 <li><a href="#sec-2">Tutorial</a></li>
 <li><a href="#sec-3">Note on the memory strategy</a></li>
+<li><a href="#sec-4">ChangeLog</a></li>
 </ol>
 
 
@@ -126,3 +129,21 @@ follows:
     and at point **2** it becomes the same as in the first case:
 
 	![Figure 4: Same situation as in Fig. 1](./doc/mem1.png)
+
+
+## Change Log<a id="sec-1"></a> ##
+
+### 6 april 2018
+
+- Version number 0.2 (alpha)
+- Testing completed
+- New global `parse_all()` function, improves error detection strategy
+- Update to the catch library
+- Moved token constants to lexer.hpp
+- A new example (makegen): a simple makefile generation language for C
+  programs
+
+
+
+
+
