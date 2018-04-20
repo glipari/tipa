@@ -3,6 +3,7 @@ include_directories (.)
 set(SOURCE_FILES
 	lexer.cpp
 	tinyparser.cpp
+	property.cpp
 )
 
 set(HEADER_FILES
@@ -10,6 +11,7 @@ set(HEADER_FILES
 	wptr.hpp
 	tinyparser.hpp
 	genvisitor.hpp
+	property.hpp
 )
 
 add_library (${PROJECT_NAME} ${LIBRARY_TYPE} ${SOURCE_FILES})

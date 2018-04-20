@@ -25,7 +25,7 @@
 #include <iomanip>
 
 #include <tinyparser.hpp>
-#include <genvisitor.hpp>
+#include <property.hpp>
 
 using namespace std;
 using namespace tipa;
@@ -66,97 +66,6 @@ using namespace tipa;
   Since I am going to generate a tree, I write the typical classes for
   representing a tree, and a builder class to build the tree.
  */
-
-class PropertyLeaf;
-class PropertyNode;
-
-using TypeList = std::tuple<PropertyLeaf, PropertyNode>;
-
-// the abstract class for representing properties.
-class AbsProperty {
-    // every property has a name
-    std::string name;  
-public:
-    AbsProperty(const std::string &n) : name(n) {}
-    std::string get_name() { return name; }
-    virtual ~AbsProperty() {}
-};
-
-// The leaf node of the tree: it contains a value
-class PropertyLeaf : public AbsProperty, public Visitable<TypeList, PropertyLeaf> {
-    std::string value;
-public:
-    PropertyLeaf(const std::string &n, const std::string &v) :
-        AbsProperty(n), value(v) {}
-    std::string get_value() { return value; }
-};
-
-// A list of abstract properties (intermediate node of the tree)
-class PropertyNode : public AbsProperty, public Visitable<TypeList, PropertyNode> {
-    // the list of children
-    std::vector< shared_ptr<AbsProperty> > list;
-public:
-    PropertyNode(const std::string &n) : AbsProperty(n) {}
-    
-    void add_child(shared_ptr<AbsProperty> p) { list.push_back(p); }
-    std::vector< shared_ptr<AbsProperty> > get_children() { return list; }
-};
-
-
-// Builds the property tree
-class PropertyBuilder {
-    stack< shared_ptr<AbsProperty> > st;
-    stack< int > level;
-public:
-    void build_leaf(parser_context &pc) {
-        //cout << "Builder: leaf has been found!" << endl;
-        auto v = pc.collect_tokens(2);
-        //for (auto t : v) cout << "Builder: Token : " << t.second << endl;
-        if (v.size() < 2) throw string("Error in parsing leaf node");
-        auto node = make_shared<PropertyLeaf>(PropertyLeaf(v[0].second, v[1].second));
-        st.push(node);
-    }
-
-    void build_root_begin(parser_context &pc) {
-        //cout << "Builder: Node has been found!" << endl;
-        auto v = pc.collect_tokens(1);
-        if (v.size() < 1) throw string("Error in parsing list node");
-        // I know there is a node, so I need to store the current
-        // stack level into a second stack
-        level.push(st.size());
-        //cout << "Saving current level " << st.size() << endl;
-        // now I create a property node with the name that I have just seen
-        auto node = make_shared<PropertyNode>(PropertyNode(v[0].second));
-        st.push(node);
-    }
-
-    void build_root_end(parser_context &pc) {
-        //cout << "Builder: Node completed!" << endl;
-        int lev = level.top(); level.pop();
-        //cout << "Builder: Level : " << lev << endl;
-        //cout << "Builder: Current stack level : " << st.size() << endl;
-        vector < shared_ptr<AbsProperty> > children;
-        
-        while (st.size() != (lev + 1)) {
-            //cout << "Builder: Getting child" << endl;
-            children.push_back(st.top()); st.pop();
-        }
-        //cout << "Builder: Getting node " << endl;
-        shared_ptr<PropertyNode> pnode =
-            std::static_pointer_cast<PropertyNode>(st.top());
-        st.pop();
-        
-        for (auto x : children) 
-            pnode->add_child(x);
-
-        st.push(pnode);
-        //cout << "Builder: Node pushed again" << endl;
-    }
-    
-    shared_ptr<AbsProperty> get() {
-        return st.top();
-    }
-};
 
 
 /*
