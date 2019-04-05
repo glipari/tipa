@@ -149,12 +149,12 @@ int main()
     builder b; 
     using namespace std::placeholders;
     
-    r_var   [std::bind(&builder::make_var,            &b, _1)];
-    r_int   [std::bind(&builder::make_leaf,           &b, _1)];
-    op_plus [std::bind(&builder::make_op<plus_node>,  &b, _1)];
-    op_minus[std::bind(&builder::make_op<minus_node>, &b, _1)];
-    op_mult [std::bind(&builder::make_op<mult_node>,  &b, _1)];
-    op_div  [std::bind(&builder::make_op<div_node>,   &b, _1)];
+    r_var.   set_action(std::bind(&builder::make_var,            &b, _1));
+    r_int.   set_action(std::bind(&builder::make_leaf,           &b, _1));
+    op_plus. set_action(std::bind(&builder::make_op<plus_node>,  &b, _1));
+    op_minus.set_action(std::bind(&builder::make_op<minus_node>, &b, _1));
+    op_mult. set_action(std::bind(&builder::make_op<mult_node>,  &b, _1));
+    op_div.  set_action(std::bind(&builder::make_op<div_node>,   &b, _1));
 
     /*****************************************************/
 

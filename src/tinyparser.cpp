@@ -262,7 +262,7 @@ namespace tipa {
         virtual bool parse(parser_context &pc) const = 0;
         bool action(parser_context &pc);
         virtual ~abs_rule() { DEC_COUNT; }
-        virtual std::string print(av_set &already_visited) {return std::string("");}
+        virtual std::string print(av_set &already_visited) { return std::string(""); }
 
         void install_action(action_t);
     };
@@ -317,7 +317,7 @@ namespace tipa {
         term_rule(const token &tk, bool c = true) : mytoken(tk), collect(c) {}
         virtual bool parse(parser_context &pc) const;
         std::string print(av_set &av) {
-            return std::string("TERM: ") + mytoken.get_expr(); 
+            return std::string("TERM: <") + mytoken.get_expr() + ">"; 
         }
     };
 
@@ -386,13 +386,20 @@ namespace tipa {
         bool f = pimpl->parse(pc); 
         return f;
     }
-
-    rule& rule::operator[](action_t af)
+    
+    rule& rule::set_action(action_t af)
     {
         pimpl->install_action(af);
         INFO_LINE("Action installed");
         return *this;
     }
+    
+    // rule& rule::operator[](action_t af)
+    // {
+    //     pimpl->install_action(af);
+    //     INFO_LINE("Action installed");
+    //     return *this;
+    // }
 
     bool term_rule::parse(parser_context &pc) const
     {
@@ -495,7 +502,7 @@ namespace tipa {
             if (auto spt = x.get()) {
                 if (av.find(spt.get()) == av.end()) {
                     av.insert(spt.get());
-                    s += spt->abs_impl->print(av) + "(Weak) >> ";	
+                    s += spt->abs_impl->print(av) + " >> ";	
                 }
                 else s+= "[visited]";
             }
@@ -736,7 +743,7 @@ namespace tipa {
         if (rl.get()) {
             if (av.find(rl.get().get()) == av.end()) {
                 av.insert(rl.get().get());
-                s += rl.get()->abs_impl->print(av) + "(strong) * ";   
+                s += rl.get()->abs_impl->print(av) + " * ";   
             }
             else {
                 s += "[visited]";
@@ -824,7 +831,7 @@ namespace tipa {
 
     std::string keyword_rule::print(av_set &av)
     {
-        return std::string("TERM: ") + kw;
+        return std::string("TERM: <") + kw + ">";
     }
 
 

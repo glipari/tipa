@@ -115,9 +115,9 @@ int main()
     using namespace std::placeholders;
 
     // semantic of the rules
-    pleaf     [std::bind(&PropertyBuilder::build_leaf,       &b, _1)];
-    root_name [std::bind(&PropertyBuilder::build_root_begin, &b, _1)];
-    root_rule [std::bind(&PropertyBuilder::build_root_end,   &b, _1)];
+    pleaf    .set_action(std::bind(&PropertyBuilder::build_leaf,       &b, _1));
+    root_name.set_action(std::bind(&PropertyBuilder::build_root_begin, &b, _1));
+    root_rule.set_action(std::bind(&PropertyBuilder::build_root_end,   &b, _1));
 
     // the example file
     stringstream str("sys {id : peppe; cpu { name : core0; } ol : pluto; }");    

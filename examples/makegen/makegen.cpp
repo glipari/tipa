@@ -13,7 +13,7 @@ using namespace std;
 using namespace tipa;
 
 /*
-  Example of language:
+  Example of language for generating a makefile:
 
     global { cxxflags {-Wall} libflags {} } 
 
@@ -24,49 +24,49 @@ using namespace tipa;
   It generates the corresponding makefile.
 */
 
-int main(int argc, const char *argv[])
+// storing the flags
+string cxxflags, libflags;
+using Executable = tuple<string, vector<string>, string>;
+vector<Executable> all_execs;
+
+rule create_grammar()
 {
     token tk_srcfile = create_lib_token("\\w+([\\.]\\w*)?");
 
     // the language
     rule file_list = rule(tk_srcfile) >> *(rule(',') >> rule(tk_srcfile));
-    rule cxxflags_rule, libflags_rule;
-    rule global_rule = keyword("global") >> rule('{') >> -cxxflags_rule >> -libflags_rule >> rule('}');
-    cxxflags_rule = keyword("cxxflags") >> extract_rule("{", "}");
-    libflags_rule = keyword("libflags") >> extract_rule("{", "}");
-    rule name_rule = keyword("name") >> rule('{') >> rule(tk_ident) >> rule('}');
-    rule srcs_rule = keyword("srcs") >> rule('{') >> file_list >> rule('}');
-    rule lib_rule = keyword("lib") >> extract_rule("{", "}");
-    rule exec_rule = keyword("exec") >> rule('{') >> name_rule >> srcs_rule >> -lib_rule >> rule('}');
-    rule root_rule = global_rule >> *exec_rule;
-
-    // storing the flags
-    string cxxflags, libflags;
-    
-    cxxflags_rule[ ([&cxxflags](parser_context &pc) {
+    rule cxxflags_rule = keyword("cxxflags") >> extract_rule("{", "}");
+    cxxflags_rule.set_action(([](parser_context &pc) {
                 cxxflags = pc.get_last_token().second;
-                cout << "CXXFLAGS = " << cxxflags << endl;
+                //cout << "CXXFLAGS = " << cxxflags << endl;
                 pc.collect_tokens();
-            })];
-    libflags_rule[ ([&libflags](parser_context &pc) {
-                libflags = pc.get_last_token().second;
-                cout << "LIBFLAGS = " << libflags << endl;
-                pc.collect_tokens();
-            })];
+            }));
 
-    using Executable = tuple<string, vector<string>, string>;
-    vector<Executable> all_execs;
+
+    rule libflags_rule = keyword("libflags") >> extract_rule("{", "}");
+    libflags_rule.set_action(([](parser_context &pc) {
+                libflags = pc.get_last_token().second;
+                //cout << "LIBFLAGS = " << libflags << endl;
+                pc.collect_tokens();
+            }));
     
-    exec_rule[ ([&all_execs] (parser_context &pc){
+    rule global_rule = keyword("global") >> rule('{') >> -std::move(cxxflags_rule) >> -std::move(libflags_rule) >> rule('}');
+    
+    rule name_rule = keyword("name") >> rule('{') >> rule(tk_ident) >> rule('}');
+    rule srcs_rule = keyword("srcs") >> rule('{') >> std::move(file_list) >> rule('}');
+    rule lib_rule = keyword("lib") >> extract_rule("{", "}");
+    rule exec_rule = keyword("exec") >> rule('{') >> std::move(name_rule) >> std::move(srcs_rule) >> -std::move(lib_rule) >> rule('}');
+        
+    exec_rule.set_action( ([] (parser_context &pc){
                 auto v = pc.collect_tokens();
                 Executable exec;
                 if (v.size() < 4) {
                     cout <<"ERROR IN PARSING, LESS THAN 4 ELEMENTS IN EXEC, SOMETHING IS WRONG" << endl;
                     exit(-1);
                 }
-                cout << "Executable : " << endl;
-                for (auto x : v) cout << x.second << endl;
-                int i = 0;
+                //cout << "Executable : " << endl;
+                //for (auto x : v) cout << x.second << endl;
+                unsigned i = 0;
                 while (i < v.size()) { 
                     if (v[i].second == "name") get<0>(exec) = v[++i].second;
                     else if (v[i].second == "lib") get<2>(exec) = v[++i].second;
@@ -80,43 +80,21 @@ int main(int argc, const char *argv[])
                     else i++;
                 }
                 // printing
-                cout << "Exec name: " << get<0>(exec) << endl;
-                cout << "srcs: ";
-                for (auto x : get<1>(exec)) cout << x << ", ";
-                cout << endl;
-                cout << "libs: " << get<2>(exec) << endl;
+                // cout << "Exec name: " << get<0>(exec) << endl;
+                // cout << "srcs: ";
+                // for (auto x : get<1>(exec)) cout << x << ", ";
+                // cout << endl;
+                // cout << "libs: " << get<2>(exec) << endl;
                 all_execs.push_back(exec);
-            })];
+            }));
 
-    parser_context pc;
+    rule root_rule = std::move(global_rule) >> *std::move(exec_rule);
     
-    ifstream fstr;
-    stringstream str("global { cxxflags { -Wall -std=c++14 } } \n\n"
-                     "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
-                     "exec { name {tool} srcs {tool.cpp, share.cpp} }");
-    
-    if (argc == 1) {
-        pc.set_stream(str);
-    }
-    else {
-        fstr.open(argv[1]);
-        pc.set_stream(fstr);
-    }
-    
-    bool f = false;
-    try {
-        f = parse_all(root_rule, pc);
-        cout << "parsing is " << boolalpha << f << endl;
-        if (!f) {
-            cout << pc.get_formatted_err_msg() << endl;
-        }
-    } catch(parse_exc &e) {
-        cout << "Parse exception!" << endl;
-        cout << pc.get_formatted_err_msg() << endl;
-    }
+    return root_rule;
+}
 
-    if (!f) return 0;
-    
+void makefile_gen(const std::string &cxxflags, const std::string &libflags, const vector<Executable> &all_execs)
+{    
     // now let's generate the makefile
     ofstream output("mymakefile");
     output << "CXXFLAGS = " << cxxflags << " -MMD" <<endl;
@@ -160,6 +138,43 @@ int main(int argc, const char *argv[])
 	output << "\trm -rf *~\n";
 
     output.close();
+}
+
+
+int main(int argc, const char *argv[])
+{
+    rule root_rule = create_grammar();
+
+    parser_context pc;
+    
+    ifstream fstr;
+    stringstream str("global { cxxflags { -Wall -std=c++17 } } \n\n"
+                     "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
+                     "exec { name {tool} srcs {tool.cpp, share.cpp} }");
+    
+    if (argc == 1) {
+        pc.set_stream(str);
+    }
+    else {
+        fstr.open(argv[1]);
+        pc.set_stream(fstr);
+    }
+    
+    bool f = false;
+    try {
+        f = parse_all(root_rule, pc);
+        cout << "parsing is " << boolalpha << f << endl;
+        if (!f) {
+            cout << pc.get_formatted_err_msg() << endl;
+        }
+    } catch(parse_exc &e) {
+        cout << "Parse exception!" << endl;
+        cout << pc.get_formatted_err_msg() << endl;
+    }
+
+    if (!f) return 0;
+
+    makefile_gen(cxxflags, libflags, all_execs);
 }
 
 

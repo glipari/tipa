@@ -31,14 +31,12 @@
 using namespace std;
 using namespace tipa;
 
-
 void print_tokens (parser_context &pc)
 {
     auto v = pc.collect_tokens();
     cout << "N. collected tokens : " << v.size() << endl;
     for (auto x : v) cout << " - " << x.second << endl;
 }
-
 
 TEST_CASE( "Two terminals, separated by addition symbol", "[parser]")
 {
@@ -156,7 +154,7 @@ TEST_CASE("Null rule", "[parser]")
 
         rule number = rule('{') >> rule(tk_int) >> rule('}');
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
-        number[myfunction];
+        number.set_action(myfunction);
 
         pc.set_stream(str1);
         CHECK(parse_all(expr, pc));
@@ -168,7 +166,7 @@ TEST_CASE("Null rule", "[parser]")
 
         rule number = rule('{') >> rule(tk_int) >> rule('}');
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
-        number [myfunction];
+        number.set_action(myfunction);
 
         //cout << "second" << endl;
         pc.set_stream(str2);
@@ -191,7 +189,7 @@ TEST_CASE("Null rule", "[parser]")
 
         rule number = rule('{') >> rule(tk_int) >> rule('}');
         rule expr = keyword("pippo") >> -number >> keyword("pluto");
-        number[myfunction];
+        number.set_action(myfunction);
 
         pc.set_stream(str3);
         CHECK(!parse_all(expr, pc));

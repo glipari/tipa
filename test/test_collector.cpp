@@ -54,7 +54,7 @@ TEST_CASE( "Collecting two integers", "[collector]")
     rule op = rule('+') | rule('-');
     rule expr = rule(tk_int) >> op >> rule(tk_int) ;
     
-    expr[f];
+    expr.set_action(f);
 
     REQUIRE(expr.parse(pc) == true);
 
@@ -87,7 +87,7 @@ TEST_CASE( "Collecting n integers", "[collector]")
     rule op = rule('+') | rule('-');
     expr = rule(';') | (rule(tk_int) >> op >> expr);
     
-    expr[f];
+    expr.set_action(f);
 
     REQUIRE(expr.parse(pc) == true);
     REQUIRE(results == expect);
