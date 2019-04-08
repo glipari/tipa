@@ -119,7 +119,7 @@ namespace tipa {
         Helper functions to convert from a string to a variable of
         type T
     */
-    inline void convert_to(const std::string &s, std::string& t) { std::cout << "convert_to string" << std::endl; t = s; }    
+    inline void convert_to(const std::string &s, std::string& t) { t = s; }    
     inline void convert_to(const std::string &s, int &i) { i = std::stoi(s); }
     inline void convert_to(const std::string &s, float &f) { f = std::stof(s); }
     inline void convert_to(const std::string &s, double &d) { d = std::stod(s); }
@@ -130,7 +130,6 @@ namespace tipa {
     template<typename T>
     void read_all(parser_context &pc, T&& var)
     {
-        std::cout << "read_all() on one parameter" << std::endl;
         convert_to(pc.read_token(), std::forward<T&>(var));
     }
     
@@ -140,7 +139,6 @@ namespace tipa {
     template<typename T, typename ...Args>
     void read_all(parser_context &pc, T&& var, Args&&...args)
     {
-        std::cout << "read_all() on multiple parameters" << std::endl;
         read_all(pc, std::forward<Args&>(args)...);
         read_all(pc, std::forward<T&>(var));
     }
@@ -184,7 +182,6 @@ namespace tipa {
         /// Installs a special action that reads a sequence of variables
         template<typename ...Args>
         rule & read_vars(Args&&... args) {
-            std::cout << "Installing lambda" << std::endl;
             set_action([&args...](auto &pc) { read_all(pc, std::forward<Args&>(args)...); });
             return *this;
         }
