@@ -29,6 +29,11 @@ string cxxflags, libflags;
 using Executable = tuple<string, vector<string>, string>;
 vector<Executable> all_execs;
 
+/*
+  Creates the grammar and returns the root rule. Notice the use of
+  std::move() for taking ownership of the rules. 
+ */
+
 rule create_grammar()
 {
     token tk_srcfile = create_lib_token("\\w+([\\.]\\w*)?");
@@ -36,19 +41,10 @@ rule create_grammar()
     // the language
     rule file_list = rule(tk_srcfile) >> *(rule(',') >> rule(tk_srcfile));
     rule cxxflags_rule = keyword("cxxflags") >> extract_rule("{", "}");
-    cxxflags_rule.set_action(([](parser_context &pc) {
-                cxxflags = pc.get_last_token().second;
-                //cout << "CXXFLAGS = " << cxxflags << endl;
-                pc.collect_tokens();
-            }));
-
-
+    cxxflags_rule.read_vars(cxxflags);
+    
     rule libflags_rule = keyword("libflags") >> extract_rule("{", "}");
-    libflags_rule.set_action(([](parser_context &pc) {
-                libflags = pc.get_last_token().second;
-                //cout << "LIBFLAGS = " << libflags << endl;
-                pc.collect_tokens();
-            }));
+    libflags_rule.read_vars(libflags);
     
     rule global_rule = keyword("global") >> rule('{') >> -std::move(cxxflags_rule) >> -std::move(libflags_rule) >> rule('}');
     
@@ -58,33 +54,22 @@ rule create_grammar()
     rule exec_rule = keyword("exec") >> rule('{') >> std::move(name_rule) >> std::move(srcs_rule) >> -std::move(lib_rule) >> rule('}');
         
     exec_rule.set_action( ([] (parser_context &pc){
-                auto v = pc.collect_tokens();
+                vector<string> v;
+                pc.collect_tokens(4, back_inserter(v));                
                 Executable exec;
-                if (v.size() < 4) {
-                    cout <<"ERROR IN PARSING, LESS THAN 4 ELEMENTS IN EXEC, SOMETHING IS WRONG" << endl;
-                    exit(-1);
-                }
-                //cout << "Executable : " << endl;
-                //for (auto x : v) cout << x.second << endl;
                 unsigned i = 0;
                 while (i < v.size()) { 
-                    if (v[i].second == "name") get<0>(exec) = v[++i].second;
-                    else if (v[i].second == "lib") get<2>(exec) = v[++i].second;
-                    else if (v[i].second == "srcs") {
+                    if (v[i] == "name") get<0>(exec) = v[++i];
+                    else if (v[i] == "lib") get<2>(exec) = v[++i];
+                    else if (v[i] == "srcs") {
                         ++i;
                         while (i < v.size()) {
-                            if (v[i].second != "lib") get<1>(exec).push_back(v[i++].second);
+                            if (v[i] != "lib") get<1>(exec).push_back(v[i++]);
                             else break;
                         }
                     }
                     else i++;
                 }
-                // printing
-                // cout << "Exec name: " << get<0>(exec) << endl;
-                // cout << "srcs: ";
-                // for (auto x : get<1>(exec)) cout << x << ", ";
-                // cout << endl;
-                // cout << "libs: " << get<2>(exec) << endl;
                 all_execs.push_back(exec);
             }));
 
@@ -95,8 +80,8 @@ rule create_grammar()
 
 void makefile_gen(const std::string &cxxflags, const std::string &libflags, const vector<Executable> &all_execs)
 {    
-    // now let's generate the makefile
-    ofstream output("mymakefile");
+    //ofstream output("mymakefile");
+    ostream output(cout.rdbuf());
     output << "CXXFLAGS = " << cxxflags << " -MMD" <<endl;
     output << "LDFLAGS = " << libflags << endl;
     output << "CPP=g++\nLD=g++\n\n.SUFFIXES:\n.SUFFIXES: .o .cpp\n" << endl;
@@ -136,8 +121,6 @@ void makefile_gen(const std::string &cxxflags, const std::string &libflags, cons
     output << "\trm -rf $(EXECS)\n\n";
     output << "cleanedit:\n";
 	output << "\trm -rf *~\n";
-
-    output.close();
 }
 
 
@@ -148,7 +131,7 @@ int main(int argc, const char *argv[])
     parser_context pc;
     
     ifstream fstr;
-    stringstream str("global { cxxflags { -Wall -std=c++17 } } \n\n"
+    stringstream str("global { cxxflags { -Wall -std=c++17 } libflags { -lm } } \n\n"
                      "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
                      "exec { name {tool} srcs {tool.cpp, share.cpp} }");
     
@@ -163,7 +146,7 @@ int main(int argc, const char *argv[])
     bool f = false;
     try {
         f = parse_all(root_rule, pc);
-        cout << "parsing is " << boolalpha << f << endl;
+        //cout << "parsing is " << boolalpha << f << endl;
         if (!f) {
             cout << pc.get_formatted_err_msg() << endl;
         }

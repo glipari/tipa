@@ -133,6 +133,12 @@ follows:
 
 ## Change Log<a id="sec-1"></a> ##
 
+## 5 april 2019
+
+- Version number 0.4 (beta)
+- Substituted operator[] with method set_action() in class rule
+- 
+
 ## 11 april 2018
 
 - Version number 0.3 (alpha)

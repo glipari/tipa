@@ -58,7 +58,6 @@ namespace tipa {
         void build_root_end(parser_context &pc);
         std::shared_ptr<AbsProperty> get() { return st.top(); }
     };
-
 }
 
 #endif

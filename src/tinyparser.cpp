@@ -125,7 +125,8 @@ namespace tipa {
         return c;
     }
 
-    // returns the last n tokens (in the same order they have been read)
+    // returns exactly the last n tokens (in the same order they have
+    // been read)
     std::vector<token_val> parser_context::collect_tokens(int n)
     {
         std::vector<token_val> v;

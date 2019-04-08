@@ -64,7 +64,7 @@ using namespace tipa;
   that I can chain three different versions of it.
 
   Since I am going to generate a tree, I write the typical classes for
-  representing a tree, and a builder class to build the tree.
+  representing a tree, and a builder class to build the tree in src/sysparser.hpp 
  */
 
 
@@ -97,7 +97,6 @@ public:
 
 
 
-
 int main()
 {
     // declare the rules
@@ -124,9 +123,8 @@ int main()
 
     // preparing the parser with the file
     parser_context pc; pc.set_stream(str);
-    bool f = false;
     try {
-        f = root_rule.parse(pc);
+        root_rule.parse(pc);
     } catch(parse_exc &e) {
         cout << "Parse exception!" << endl;
     }

@@ -20,7 +20,12 @@
   -----------------------------------------------------------------
 
   This is an implementation of the Visitor pattern in a modern C++
-  style.
+  style. The code in this file have been taken and adapted from
+  dkorolev :
+
+    https://gist.github.com/dkorolev/8529785d1c692764ddc0
+    
+
 
   How to use:
 
@@ -53,7 +58,7 @@
   abstract class) is not part of the visitable set of classes, in fact
   we will never actually need to visit the abstract class (there is no
   object of that type). Also, we need a lot of dynamic casts here and
-  there, because to call accept wee need to first cast to
+  there, because to call accept we need to first cast to
   AbstractVisitable<TypeList>. That's the price to pay to be generic!
 
   For example, if Mesh and Text both derive from abstract class Foo,

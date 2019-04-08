@@ -30,8 +30,8 @@
 #define ERR_PARSE_ALT   -101
 
 namespace tipa {
-
-    /** It contains the lexer and the last token that has been read,
+    /** 
+     * It contains the lexer and the last token that has been read,
      * that is the parser state during parsing. An object of this
      * class must be created by the user and passed to the parse()
      * method of the root rule. It is then passed around the rule tree
@@ -50,8 +50,7 @@ namespace tipa {
         lexer lex;
         // the collected tokens
         std::vector<token_val> collected;
-        // do not remember what it is...
-        //std::stack<unsigned int> ncoll;
+
         std::stack<std::vector<token_val>> saved;
     
         //token_val error_msg;
@@ -73,29 +72,80 @@ namespace tipa {
         void restore();
         void discard_saved();
 
-        // reads the last token
+        /// reads the last token
         token_val get_last_token();
 
         void set_error(const token_val &tk, const std::string &err_msg);
         void empty_error_stack() { while (!error_stack.empty()) error_stack.pop(); }
-        error_message  get_last_error() const { if (!error_stack.empty()) return error_stack.top(); else return error_message();}
+        error_message get_last_error() const { if (!error_stack.empty()) return error_stack.top(); else return error_message();}
         
         std::string get_error_string() const { if (!error_stack.empty()) return error_stack.top().token.second; else return "";}
         std::string get_formatted_err_msg();
         bool eof();
-        //std::pair<int, int> get_error_pos() const { return lex.get_pos(); } // TODO: should it be private ?
 
         void push_token(token_val tk);
         void push_token(const std::string &s);
 
-        // returns all tokens collected so far
+        /// returns all tokens collected so far
         std::vector<token_val> collect_tokens();
 
-        // returns the last n tokens (in the same order they have been read)
+        /// returns the last n tokens (in the same order they have been read)
         std::vector<token_val> collect_tokens(int n);
+
+        /// writes the last n tokens (in the same order they have been
+        /// read), applying a filter on it (the default filter
+        /// extracts only the second element of the token_val pair)
+        template<typename It, typename F=std::function<std::string(token_val)>>
+        void collect_tokens(int n, It it, F fun=[](token_val tv) { return tv.second; }) {
+            int s = collected.size();
+            if (s < n) 
+                throw std::string("too few parameters");
+            
+            auto p = begin(collected) + s - n;
+            for(auto q = p; q != end(collected); q++) *(it++) = fun(*q);
+            collected.erase(p, collected.end());
+        }
+
+        std::string read_token() {
+            if (collected.size() == 0) throw std::string("expecting a token");
+            token_val tv = collected.back();
+            collected.pop_back();
+            return tv.second;
+        }
+
     };
 
-    /// implementation dependent
+    /** 
+        Helper functions to convert from a string to a variable of
+        type T
+    */
+    inline void convert_to(const std::string &s, std::string& t) { std::cout << "convert_to string" << std::endl; t = s; }    
+    inline void convert_to(const std::string &s, int &i) { i = std::stoi(s); }
+    inline void convert_to(const std::string &s, float &f) { f = std::stof(s); }
+    inline void convert_to(const std::string &s, double &d) { d = std::stod(s); }
+
+    /**
+       Reads a token and updates a variable 
+     */
+    template<typename T>
+    void read_all(parser_context &pc, T&& var)
+    {
+        std::cout << "read_all() on one parameter" << std::endl;
+        convert_to(pc.read_token(), std::forward<T&>(var));
+    }
+    
+    /**
+       Reads a sequence of N tokens to update N variables
+     */
+    template<typename T, typename ...Args>
+    void read_all(parser_context &pc, T&& var, Args&&...args)
+    {
+        std::cout << "read_all() on multiple parameters" << std::endl;
+        read_all(pc, std::forward<Args&>(args)...);
+        read_all(pc, std::forward<T&>(var));
+    }
+    
+    /// forward declaration: implementation dependent
     struct impl_rule;
 
     /// The action function which is passed the parser context
@@ -128,14 +178,22 @@ namespace tipa {
         /// Assigmnent between rules
         rule &operator=(const rule &);
     
+        /// Sets an action for this rule
+        rule& set_action(action_t af);
+                
+        /// Installs a special action that reads a sequence of variables
+        template<typename ...Args>
+        rule & read_vars(Args&&... args) {
+            std::cout << "Installing lambda" << std::endl;
+            set_action([&args...](auto &pc) { read_all(pc, std::forward<Args&>(args)...); });
+            return *this;
+        }
+
         /// Parses a rule
         bool parse(parser_context &pc) const;
 
-        // /// Sets an action for this rule
-        // rule& operator[](action_t af);
-
-        rule& set_action(action_t af);
-
+        /* -------------------------- */
+        
         /// This constructor is not part of the interface, it is for
         /// internal use only!!  (However it must be public to not
         /// overcomplicate the implementation)
