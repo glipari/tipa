@@ -962,11 +962,19 @@ namespace tipa {
     }
 
 
+    rule list_rule(rule &&r, const std::string &sep)
+    {
+        rule root;
+        root = std::move(r) >> -(rule(sep) >> root);
+        
+        return root;
+    }
+
+    
     bool parse_all(const rule &r, parser_context &pc)
     {
         bool f = r.parse(pc);
         bool e = pc.eof();
-        // std::cout << "parse_all() = " << f << "   eof = " << e << std::endl;
         if (!e) return false;
         else return f;
     }

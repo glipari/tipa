@@ -31,6 +31,15 @@
 
 namespace tipa {
     /** 
+        Helper functions to convert from a string to a variable of
+        type T
+    */
+    inline void convert_to(const std::string &s, std::string& t) { t = s; }    
+    inline void convert_to(const std::string &s, int &i) { i = std::stoi(s); }
+    inline void convert_to(const std::string &s, float &f) { f = std::stof(s); }
+    inline void convert_to(const std::string &s, double &d) { d = std::stod(s); }
+
+    /** 
      * It contains the lexer and the last token that has been read,
      * that is the parser state during parsing. An object of this
      * class must be created by the user and passed to the parse()
@@ -106,23 +115,22 @@ namespace tipa {
             collected.erase(p, collected.end());
         }
 
+        template <typename It>
+        void collect_tokens(It it) {
+            for (auto x : collected) {
+                convert_to(x.second, *(it++));
+            }
+            collected.erase(collected.begin(), collected.end());
+        }
+
         std::string read_token() {
             if (collected.size() == 0) throw std::string("expecting a token");
             token_val tv = collected.back();
             collected.pop_back();
             return tv.second;
         }
-
     };
 
-    /** 
-        Helper functions to convert from a string to a variable of
-        type T
-    */
-    inline void convert_to(const std::string &s, std::string& t) { t = s; }    
-    inline void convert_to(const std::string &s, int &i) { i = std::stoi(s); }
-    inline void convert_to(const std::string &s, float &f) { f = std::stof(s); }
-    inline void convert_to(const std::string &s, double &d) { d = std::stod(s); }
 
     /**
        Reads a token and updates a variable 
@@ -225,6 +233,9 @@ namespace tipa {
      * empty rule and the rule a */
     rule operator-(rule &a);
     rule operator-(rule &&a);
+
+    /** creates a rule that parses a list of elements */
+    rule list_rule(rule &&r, const std::string &sep = ",");
 
     /** Extracts (collects) part of the text. The first parameter
      * represents the string which marks the start of the text
