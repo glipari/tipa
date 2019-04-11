@@ -115,12 +115,11 @@ namespace tipa {
             collected.erase(p, collected.end());
         }
 
-        template <typename It>
-        void collect_tokens(It it) {
-            for (auto x : collected) {
-                convert_to(x.second, *(it++));
-            }
-            collected.erase(collected.begin(), collected.end());
+        template<typename It, typename F=std::function<std::string(token_val)>>
+        void collect_tokens(It it, F fun=[](token_val tv) { return tv.second; }) {
+            auto p = begin(collected);
+            for (auto q = p; q != end(collected); q++) *(it++) = fun(*q);
+            collected.erase(p, collected.end());
         }
 
         std::string read_token() {

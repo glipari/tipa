@@ -92,3 +92,32 @@ TEST_CASE( "Collecting n integers", "[collector]")
     REQUIRE(expr.parse(pc) == true);
     REQUIRE(results == expect);
 }
+
+
+TEST_CASE( "Collecting a number of strings", "[collector]")
+{
+    stringstream str("a, b, c, d, e;");
+    parser_context pc;
+    pc.set_stream(str);
+    
+    vector<string> results;
+    vector<string> expect = {"a", "b", "c", "d", "e"};
+
+    rule expr = list_rule(rule(tk_ident)) >> rule(';');
+
+    SECTION("Collecting 5 strings") {
+        expr.set_action([&results](parser_context &pc) {
+                pc.collect_tokens(5, back_inserter(results));
+            });
+    }
+    SECTION("Collecting a number of strings") {
+        expr.set_action([&results](parser_context &pc) {
+                pc.collect_tokens(back_inserter(results));
+            });
+    }
+    
+    REQUIRE(expr.parse(pc) == true);
+    REQUIRE(results == expect);
+}
+
+
