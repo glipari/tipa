@@ -771,28 +771,29 @@ namespace tipa {
         std::string close_sym;
         bool nested;
         bool line;
+        bool collect;
     public:
-        extr_rule(const std::string &op, const std::string &cl) :
-            open_sym(op), close_sym(cl), nested(true), line(false)
+        extr_rule(const std::string &op, const std::string &cl, bool coll) :
+            open_sym(op), close_sym(cl), nested(true), line(false), collect(coll)
             {}
-        extr_rule(const std::string &op_cl, bool l = false) :
-            open_sym(op_cl), close_sym(op_cl), nested(false), line(l)
+        extr_rule(const std::string &op_cl, bool l = false, bool coll = false) :
+            open_sym(op_cl), close_sym(op_cl), nested(false), line(l), collect(coll)
             {}
         bool parse(parser_context &pc) const {
             INFO("extr_rule::parse()");
             token open_tk = {tk_char.get_name(), padding(open_sym)};
             if (pc.try_token(open_tk).first == tk_char.get_name()) {
                 if (line) {
-                    pc.push_token(pc.extract_line());
+                    auto s = pc.extract_line();
+                    if (collect) pc.push_token(s);
                     INFO_LINE(" ** ok");
-                    //pc.next_token();
                     return true; 
                 }
                 std::string o = "";
                 if (nested) o = open_sym;
-                pc.push_token(pc.extract(o, close_sym));
+                auto s = pc.extract(o, close_sym);
+                if (collect) pc.push_token(s);
                 INFO_LINE(" ** ok");
-                //pc.next_token();
                 return true;
             }
             else {
@@ -836,21 +837,21 @@ namespace tipa {
     }
 
 
-    rule extract_rule(const std::string &op, const std::string &cl)
+    rule extract_rule(const std::string &op, const std::string &cl, bool coll)
     {
-        auto s = std::make_shared<impl_rule>(new extr_rule(op, cl));
+        auto s = std::make_shared<impl_rule>(new extr_rule(op, cl, coll));
         return rule(s);
     }
 
-    rule extract_rule(const std::string &opcl)
+    rule extract_rule(const std::string &opcl, bool coll)
     {
-        auto s = std::make_shared<impl_rule>(new extr_rule(opcl));
+        auto s = std::make_shared<impl_rule>(new extr_rule(opcl, false, coll));
         return rule(s);
     }
 
-    rule extract_line_rule(const std::string &opcl)
+    rule extract_line_rule(const std::string &opcl, bool coll)
     {
-        auto s = std::make_shared<impl_rule>(new extr_rule(opcl, true));
+        auto s = std::make_shared<impl_rule>(new extr_rule(opcl, true, coll));
         return rule(s);
     }
 

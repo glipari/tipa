@@ -241,17 +241,17 @@ namespace tipa {
      * sequence, whereas the second parameters represents the closing
      * sequence. For example, in this way it is possible to skip
      * (remove from parsing) c-style comments */
-    rule extract_rule(const std::string &op, const std::string &cl);
+    rule extract_rule(const std::string &op, const std::string &cl, bool collect=false);
 
     /** Extracts (collects) part of the text. Unlike the previous
      * function, this one uses the same sequence for opening and
      * closing.*/
-    rule extract_rule(const std::string &opcl);
+    rule extract_rule(const std::string &opcl, bool collect = false);
 
     /** This extracts from the starting sequence (the initial
      * parameter) until the end of the line. Useful for C++ style
      * comments '//' */
-    rule extract_line_rule(const std::string &opcl);
+    rule extract_line_rule(const std::string &opcl, bool collect = false);
 
     /** Matches a given keyword. By default, the keyword is collected. */
     rule keyword(const std::string &key, bool collect = true);
