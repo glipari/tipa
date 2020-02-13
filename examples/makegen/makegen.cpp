@@ -36,21 +36,24 @@ vector<Executable> all_execs;
 
 rule create_grammar()
 {
+    // creates a token to parse a file name (of the forme file.ext)
     token tk_srcfile = create_lib_token("\\w+([\\.]\\w*)?");
 
     // the language
+    // a list of files separated by commas
     rule file_list = rule(tk_srcfile) >> *(rule(',') >> rule(tk_srcfile));
-    rule cxxflags_rule = keyword("cxxflags") >> extract_rule("{", "}");
+
+    rule cxxflags_rule = keyword("cxxflags") >> extract_rule("{", "}", true);
     cxxflags_rule.read_vars(cxxflags);
     
-    rule libflags_rule = keyword("libflags") >> extract_rule("{", "}");
+    rule libflags_rule = keyword("libflags") >> extract_rule("{", "}", true);
     libflags_rule.read_vars(libflags);
     
     rule global_rule = keyword("global") >> rule('{') >> -std::move(cxxflags_rule) >> -std::move(libflags_rule) >> rule('}');
     
     rule name_rule = keyword("name") >> rule('{') >> rule(tk_ident) >> rule('}');
     rule srcs_rule = keyword("srcs") >> rule('{') >> std::move(file_list) >> rule('}');
-    rule lib_rule = keyword("lib") >> extract_rule("{", "}");
+    rule lib_rule = keyword("lib") >> extract_rule("{", "}", true);
     rule exec_rule = keyword("exec") >> rule('{') >> std::move(name_rule) >> std::move(srcs_rule) >> -std::move(lib_rule) >> rule('}');
         
     exec_rule.set_action( ([] (parser_context &pc){
@@ -80,7 +83,6 @@ rule create_grammar()
 
 void makefile_gen(const std::string &cxxflags, const std::string &libflags, const vector<Executable> &all_execs)
 {    
-    //ofstream output("mymakefile");
     ostream output(cout.rdbuf());
     output << "CXXFLAGS = " << cxxflags << " -MMD" <<endl;
     output << "LDFLAGS = " << libflags << endl;
@@ -131,6 +133,8 @@ int main(int argc, const char *argv[])
     parser_context pc;
     
     ifstream fstr;
+
+    // the default example
     stringstream str("global { cxxflags { -Wall -std=c++17 } libflags { -lm } } \n\n"
                      "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
                      "exec { name {tool} srcs {tool.cpp, share.cpp} }");
@@ -146,7 +150,7 @@ int main(int argc, const char *argv[])
     bool f = false;
     try {
         f = parse_all(root_rule, pc);
-        //cout << "parsing is " << boolalpha << f << endl;
+        cout << "parsing completed, value =" << boolalpha << f << endl;
         if (!f) {
             cout << pc.get_formatted_err_msg() << endl;
         }

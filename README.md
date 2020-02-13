@@ -137,7 +137,6 @@ follows:
 
 - Version number 0.4 (beta)
 - Substituted operator[] with method set_action() in class rule
-- 
 
 ## 11 april 2018
 
