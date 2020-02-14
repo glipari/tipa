@@ -131,6 +131,8 @@ namespace tipa {
     };
 
 
+    /* helper functions with common actions */
+
     /**
        Reads a token and updates a variable 
      */
@@ -150,6 +152,7 @@ namespace tipa {
         read_all(pc, std::forward<T&>(var));
     }
     
+
     /// forward declaration: implementation dependent
     struct impl_rule;
 
