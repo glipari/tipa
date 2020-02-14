@@ -151,6 +151,28 @@ namespace tipa {
         error_stack.push(em);
     }
 
+    void parser_context::empty_error_stack()
+    {
+        while (!error_stack.empty())
+            error_stack.pop();
+    }
+    
+    parser_context::error_message parser_context::get_last_error() const
+    {
+        if (!error_stack.empty())
+            return error_stack.top();
+        else return error_message();
+    }
+
+    std::string parser_context::get_error_string() const
+    {
+        if (!error_stack.empty())
+            return error_stack.top().token.second;
+        else return "";
+    }
+
+
+    
     bool parser_context::eof()
     {
         return lex.eof();
@@ -173,6 +195,18 @@ namespace tipa {
         return err.str();
     }
 
+
+
+    std::string parser_context::read_token()
+    {
+        if (collected.size() == 0) throw std::string("expecting a token");
+        token_val tv = collected.back();
+        collected.pop_back();
+        return tv.second;
+    }
+
+
+    
 /* ----------------------------------------------- */
 
     /* Here we describe the design of the implementation. 

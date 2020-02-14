@@ -85,15 +85,17 @@ namespace tipa {
         token_val get_last_token();
 
         void set_error(const token_val &tk, const std::string &err_msg);
-        void empty_error_stack() { while (!error_stack.empty()) error_stack.pop(); }
-        error_message get_last_error() const { if (!error_stack.empty()) return error_stack.top(); else return error_message();}
+        void empty_error_stack(); 
+        error_message get_last_error() const;
         
-        std::string get_error_string() const { if (!error_stack.empty()) return error_stack.top().token.second; else return "";}
+        std::string get_error_string() const;
         std::string get_formatted_err_msg();
         bool eof();
 
         void push_token(token_val tk);
         void push_token(const std::string &s);
+
+        std::string read_token();
 
         /// returns all tokens collected so far
         std::vector<token_val> collect_tokens();
@@ -122,12 +124,6 @@ namespace tipa {
             collected.erase(p, collected.end());
         }
 
-        std::string read_token() {
-            if (collected.size() == 0) throw std::string("expecting a token");
-            token_val tv = collected.back();
-            collected.pop_back();
-            return tv.second;
-        }
     };
 
 
