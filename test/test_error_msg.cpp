@@ -42,45 +42,39 @@ TEST_CASE("test error position 1", "[error]")
 
     SECTION("error in the first rule") {
         stringstream str("1234 ^ second");
+        stringstream arr("^");
         pc.set_stream(str);
         bool f = parse_all(composition, pc);
         REQUIRE(not f);
         REQUIRE(pc.get_formatted_err_msg() ==
-                "At line 1, column 0:\n"
-                "1234 ^ second\n"
-                "^\n"
-                "Error 100: Sequential rule failed\n"
-                "At line 1, column 0:\n" 
-                "1234 ^ second\n"
-                "^\n"
+                "@[1:0]\n" 
+                + str.str() + "\n"
+                + arr.str() + "\n"
                 "Error 1: Terminal rule failed\n");
     }
 
     SECTION("error missing second operand") {
-        stringstream str("first ->");
+        stringstream str("first ->"); 
+        stringstream arr("-------^");
         pc.set_stream(str);
         bool f = parse_all(composition, pc);
         REQUIRE(not f);
         REQUIRE(pc.get_formatted_err_msg() ==
-                "At line 1, column 8:\n"
-                "first ->\n"
-                "-------^\n"
-                "Error 100: Sequential rule failed\n"
-                "At line 1, column 8:\n"
-                "first ->\n"
-                "-------^\n"
+                "@[1:8]\n"
+                + str.str() + "\n"
+                + arr.str() + "\n"
                 "Error 1: Terminal rule failed\n"
             );
     }
 
-    SECTION("error bad operator" ) {
-        stringstream str("first * second");
-        pc.set_stream(str);
-        bool f = parse_all(composition, pc);
-        REQUIRE(not f);
-        REQUIRE(pc.get_formatted_err_msg() ==
-                ""
-            );
-    }
+    // SECTION("error bad operator" ) {
+    //     stringstream str("first * second");
+    //     pc.set_stream(str);
+    //     bool f = parse_all(composition, pc);
+    //     REQUIRE(not f);
+    //     REQUIRE(pc.get_formatted_err_msg() ==
+    //             ""
+    //         );
+    // }
     
 }

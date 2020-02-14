@@ -161,8 +161,8 @@ namespace tipa {
         std::stringstream err;
         while (!error_stack.empty()) {
             auto em = error_stack.top();
-            err << "At line " << em.position.first 
-                << ", column " << em.position.second << ":" << std::endl;
+            err << "@[" << em.position.first 
+                << ":" << em.position.second << "]" << std::endl;
             err << em.line << std::endl;    
             for (int i=0; i<em.position.second-1; ++i) err << "-";
             err << "^" << std::endl;
@@ -395,13 +395,6 @@ namespace tipa {
         return *this;
     }
     
-    // rule& rule::operator[](action_t af)
-    // {
-    //     pimpl->install_action(af);
-    //     INFO_LINE("Action installed");
-    //     return *this;
-    // }
-
     bool term_rule::parse(parser_context &pc) const
     {
         INFO_LINE("term_rule::parse() trying " << mytoken.get_expr());
@@ -478,7 +471,7 @@ namespace tipa {
                         return false;
                     }
                     else {
-                        pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"}, "Sequential rule failed");
+                        //pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"}, "Sequential rule failed");
                         INFO_LINE(" ** FALSE ");
                         pc.restore();
                         return false;
@@ -860,88 +853,6 @@ namespace tipa {
         auto s = std::make_shared<impl_rule>(new keyword_rule(key, collect));
         return rule(s);
     }
-
-/* 
-   A sequence of rules to be evaluated in order. 
-   I expect that they match one after the other. 
-*/
-    // class strict_seq_rule : public seq_rule {
-    // public:
-
-    //     strict_seq_rule(rule &a, rule &b);
-    //     strict_seq_rule(rule &&a, rule &b);
-    //     strict_seq_rule(rule &a, rule &&b);
-    //     strict_seq_rule(rule &&a, rule &&b);
-
-    //     virtual bool parse(parser_context &pc) const; 
-    // };
-
-    // strict_seq_rule::strict_seq_rule(rule &a, rule &b) : seq_rule(a, b)
-    // {
-    // }
-
-    // strict_seq_rule::strict_seq_rule(rule &&a, rule &b) : seq_rule(std::move(a), b)
-    // {
-    // }
-
-    // strict_seq_rule::strict_seq_rule(rule &a, rule &&b) : seq_rule(a, std::move(b))
-    // {
-    // }
-
-    // strict_seq_rule::strict_seq_rule(rule &&a, rule &&b) : seq_rule(std::move(a), std::move(b))
-    // {
-    // }
-
-    // bool strict_seq_rule::parse(parser_context &pc) const
-    // {
-    //     INFO("strict_seq_rule::parse()");
-
-    //     int i = 0;
-    //     for (auto &x : rl) {
-    //         if (auto spt = x.get()) {
-    //             if (!spt->parse(pc)) {
-    //                 pc.set_error({ERR_PARSE_SEQ, "Wrong element in sequence"});
-    //                 INFO_LINE(" ** FALSE ");
-    //                 if (i==0) return false;
-    //                 else throw parse_exc("Error in strict sequence (after first)");
-    //             }
-    //             i++;
-    //         }
-    //         else {
-    //             throw parse_exc("strict_seq_rule: unvalid weak pointer");
-    //         }
-    //     }    
-
-    //     INFO_LINE(" ** ok ");
-    //     return true;
-    // }
-
-    // rule operator>(rule &a, rule &b)
-    // {
-    //     INFO_LINE("sseq operator: &a and &b");
-
-    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,b));
-    //     return rule(s);
-    // }
-    // rule operator>(rule &&a, rule &b)
-    // {
-    //     INFO_LINE("sseq operator: &&a and &b");
-    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),b));
-    //     return rule(s);
-    // }
-    // rule operator>(rule &a, rule &&b)
-    // {
-    //     INFO_LINE("sseq operator: &a and &&b");
-
-    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(a,std::move(b)));
-    //     return rule(s);
-    // }
-    // rule operator>(rule &&a, rule &&b)
-    // {
-    //     INFO_LINE("sseq operator: &&a and &&b");
-    //     auto s = std::make_shared<impl_rule>(new strict_seq_rule(std::move(a),std::move(b)));
-    //     return rule(s);
-    // }
 
     rule null()
     {
