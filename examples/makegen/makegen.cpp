@@ -26,7 +26,7 @@ using namespace tipa;
 
 // storing the flags
 string cxxflags, libflags;
-using Executable = tuple<string, vector<string>, string>;
+using Executable = tuple<string, vector<string>, string, string>;
 vector<Executable> all_execs;
 
 /*
@@ -54,20 +54,26 @@ rule create_grammar()
     rule name_rule = keyword("name") >> rule('{') >> rule(tk_ident) >> rule('}');
     rule srcs_rule = keyword("srcs") >> rule('{') >> std::move(file_list) >> rule('}');
     rule lib_rule = keyword("lib") >> extract_rule("{", "}", true);
-    rule exec_rule = keyword("exec") >> rule('{') >> std::move(name_rule) >> std::move(srcs_rule) >> -std::move(lib_rule) >> rule('}');
+    rule inc_rule = keyword("include") >> extract_rule("{", "}", true);
+    rule exec_rule = keyword("exec") >> rule('{') >>
+        std::move(name_rule) >> std::move(srcs_rule) >>
+        -std::move(inc_rule) >> -std::move(lib_rule) >>
+        rule('}');
         
     exec_rule.set_action( ([] (parser_context &pc){
                 vector<string> v;
-                pc.collect_tokens(4, back_inserter(v));                
+                pc.collect_tokens(back_inserter(v));                
                 Executable exec;
                 unsigned i = 0;
                 while (i < v.size()) { 
                     if (v[i] == "name") get<0>(exec) = v[++i];
                     else if (v[i] == "lib") get<2>(exec) = v[++i];
+                    else if (v[i] == "include") get<3>(exec) = v[++i];
                     else if (v[i] == "srcs") {
                         ++i;
                         while (i < v.size()) {
-                            if (v[i] != "lib") get<1>(exec).push_back(v[i++]);
+                            if (v[i] != "lib" and v[i] != "include")
+                                get<1>(exec).push_back(v[i++]);
                             else break;
                         }
                     }
@@ -113,8 +119,16 @@ void makefile_gen(const std::string &cxxflags, const std::string &libflags, cons
 
     output << "-include $(ALL_DEPS)\n" << endl;        
 
-    output << ".cpp.o:\n\t$(CPP) $(CXXFLAGS) -c $<\n\n";
+    //output << ".cpp.o:\n\t$(CPP) $(CXXFLAGS) -c $<\n\n";
     for (auto x : all_execs) {
+        for (auto y : get<1>(x)) {
+            auto pos = y.find_last_of(".");
+            auto len = y.size() - pos;
+            auto obj =  y;
+            obj.replace(pos, len, ".o");
+            output << obj << " : " << y << "\n";
+            output << "\t$(CPP) $(CXXFLAGS) " << get<3>(x) << " -c $<\n\n";
+        }
         output << get<0>(x) << " : $(OBJS_" <<  get<0>(x) << ")\n";
         output << "\t$(LD) -o $@ $^ $(LDFLAGS) " << get<2>(x) << "\n\n";
     }
@@ -150,7 +164,7 @@ int main(int argc, const char *argv[])
     bool f = false;
     try {
         f = parse_all(root_rule, pc);
-        cout << "parsing completed, value =" << boolalpha << f << endl;
+        //cout << "parsing completed, value =" << boolalpha << f << endl;
         if (!f) {
             cout << pc.get_formatted_err_msg() << endl;
         }

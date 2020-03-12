@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 set(CMAKE_CXX_FLAGS "-Wall -O3") 
 
+set(CMAKE_INSTALL_PREFIX /usr/local/)
+
 project (tipa)
 
 set(LIBRARY_TYPE STATIC)

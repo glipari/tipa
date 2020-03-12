@@ -1,5 +1,6 @@
 global { cxxflags { -funexpanded-constructors -std=c++14 } }
 
 exec { name {prog} srcs {pippo.cpp, pluto.cpp} lib { -lrt } }
-exec { name {tool} srcs {pluto.cpp, paperino.cpp} }
+exec { name {tool} srcs {pluto.cpp, paperino.cpp}
+     include { -I/usr/local/include } lib { -L/usr/local/lib -ltipa } }
 
