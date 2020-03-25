@@ -31,12 +31,12 @@
 namespace tipa {
     typedef int token_id;
 
-    class parse_exc : public std::exception {
+    class parse_exc {
         std::string msg;
     public:
         parse_exc();
         parse_exc(const std::string &err_msg); 
-        std::string what();
+        std::string what() const;
         ~parse_exc() throw();
     };
 

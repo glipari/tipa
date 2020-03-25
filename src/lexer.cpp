@@ -37,7 +37,7 @@ namespace tipa {
     parse_exc::~parse_exc() throw()
     {} 
 
-    string parse_exc::what() 
+    string parse_exc::what() const
     {
         return msg;
     }
