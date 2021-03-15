@@ -5,6 +5,7 @@
 #include <fstream>
 #include <memory>
 #include <tuple>
+#include <map>
 
 #include <tinyparser.hpp>
 #include <genvisitor.hpp>
@@ -37,7 +38,7 @@ vector<Executable> all_execs;
 rule create_grammar()
 {
     // creates a token to parse a file name (of the forme file.ext)
-    token tk_srcfile = create_lib_token("\\w+([\\.]\\w*)?");
+    token tk_srcfile = create_lib_token("\\w+([\\.]\\w*)?"); // TODO : missing the '-' character
 
     // the language
     // a list of files separated by commas
@@ -82,13 +83,16 @@ rule create_grammar()
                 all_execs.push_back(exec);
             }));
 
-    rule root_rule = std::move(global_rule) >> *std::move(exec_rule);
+    rule root_rule = std::move(global_rule) >> *(std::move(exec_rule));
     
     return root_rule;
 }
 
 void makefile_gen(const std::string &cxxflags, const std::string &libflags, const vector<Executable> &all_execs)
-{    
+{
+
+    std::map<std::string, bool> objects;
+        
     ostream output(cout.rdbuf());
     output << "CXXFLAGS = " << cxxflags << " -MMD" <<endl;
     output << "LDFLAGS = " << libflags << endl;
@@ -126,8 +130,11 @@ void makefile_gen(const std::string &cxxflags, const std::string &libflags, cons
             auto len = y.size() - pos;
             auto obj =  y;
             obj.replace(pos, len, ".o");
-            output << obj << " : " << y << "\n";
-            output << "\t$(CPP) $(CXXFLAGS) " << get<3>(x) << " -c $<\n\n";
+            if (objects.find(obj) == objects.end()) {
+                output << obj << " : " << y << "\n";
+                output << "\t$(CPP) $(CXXFLAGS) " << get<3>(x) << " -c $<\n\n";
+                objects[obj] = true;
+            }
         }
         output << get<0>(x) << " : $(OBJS_" <<  get<0>(x) << ")\n";
         output << "\t$(LD) -o $@ $^ $(LDFLAGS) " << get<2>(x) << "\n\n";
@@ -145,12 +152,16 @@ int main(int argc, const char *argv[])
     rule root_rule = create_grammar();
 
     parser_context pc;
+
+    pc.set_comment("/*", "*/", "//");
     
     ifstream fstr;
 
     // the default example
     stringstream str("global { cxxflags { -Wall -std=c++17 } libflags { -lm } } \n\n"
-                     "exec { name {prog} srcs {prog.cpp, share.cpp} lib { -lrt } }\n" 
+                     "exec { name {prog} \n"
+                     "// long comment \n"
+                     "srcs {prog.cpp, /* short comment */ share.cpp} lib { -lrt } }\n" 
                      "exec { name {tool} srcs {tool.cpp, share.cpp} }");
     
     if (argc == 1) {
