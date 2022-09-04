@@ -47,7 +47,6 @@ namespace tipa {
         std::vector< std::shared_ptr<AbsProperty> > get_children() { return list; }
     };
 
-
     // Builds the property tree
     class PropertyBuilder {
         std::stack< std::shared_ptr<AbsProperty> > st;

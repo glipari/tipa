@@ -25,8 +25,6 @@
 
     https://gist.github.com/dkorolev/8529785d1c692764ddc0
     
-
-
   How to use:
 
   First, we need to define a tuple of all types of visitable objects,

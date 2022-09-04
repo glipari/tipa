@@ -62,10 +62,7 @@ using namespace tipa;
   Since the three sections are similar, in this example I write the
   parser for a single one. The idea is to generalise the parser so
   that I can chain three different versions of it.
-
-  Since I am going to generate a tree, I write the typical classes for
-  representing a tree, and a builder class to build the tree in src/sysparser.hpp 
- */
+*/
 
 
 /*
