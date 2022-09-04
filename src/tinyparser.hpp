@@ -110,7 +110,7 @@ namespace tipa {
         void collect_tokens(int n, It it, F fun=[](token_val tv) { return tv.second; }) {
             int s = collected.size();
             if (s < n) 
-                throw std::string("too few parameters");
+                throw parse_exc("collect_tokens() : too few parameters have been collected");
             
             auto p = begin(collected) + s - n;
             for(auto q = p; q != end(collected); q++) *(it++) = fun(*q);

@@ -98,7 +98,7 @@ namespace tipa {
     void parser_context::restore()
     {
         lex.restore();
-        if (saved.size() < 1) throw "parser_context::restore() on an empty stack !!!" ;
+        if (saved.size() < 1) throw parse_exc("parser_context::restore() on an empty stack !!!") ;
         collected = saved.top();
         saved.pop();
     }
@@ -107,13 +107,13 @@ namespace tipa {
     {
         lex.discard_saved();
         //ncoll.pop();
-        if (saved.size() < 1) throw "parser_context::discard_saved() on an empty stack !!!" ;
+        if (saved.size() < 1) throw parse_exc("parser_context::discard_saved() on an empty stack !!!") ;
         saved.pop();
     }
 
     token_val parser_context::get_last_token()
     {
-        if (collected.size() < 1) throw "parser_context::get_last_token(): there is no token!!";
+        if (collected.size() < 1) throw parse_exc("parser_context::get_last_token(): there is no token!!");
         else return collected[collected.size()-1];
     }
 
@@ -199,7 +199,7 @@ namespace tipa {
 
     std::string parser_context::read_token()
     {
-        if (collected.size() == 0) throw std::string("expecting a token");
+        if (collected.size() == 0) throw parse_exc("read_token(): expecting a token");
         token_val tv = collected.back();
         collected.pop_back();
         return tv.second;
