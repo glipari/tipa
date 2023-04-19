@@ -91,7 +91,6 @@ public:
 };
 
 
-
 int main()
 {
     // forward declaration of the rules
@@ -131,7 +130,7 @@ int main()
         root_rule.parse(pc);
     } catch(parse_exc &e) {
         cout << "Parse exception!" << endl;
-        cout << e.get_formatted_err_msg() << endl;
+        cout << pc.get_formatted_err_msg() << endl;
     }
 
     // now I visit the tree for printing it
