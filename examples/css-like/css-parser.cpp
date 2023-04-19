@@ -10,8 +10,7 @@
 
 using namespace tipa;
 
-
-/** example of css :
+/** Example of css :
 
     button1[device=ipad] {
        font: "Roboto", 12
@@ -35,7 +34,9 @@ int main(int argc, char *argv[])
     // this is a hexadecimal color
     rule hexaColor = rule("\"") >> rule(tk_hexacolor) >> rule("\"");
     // this is a font
-    rule font = rule("font") >> rule(":") >> rule("\"") >> rule(tk_ident) >> rule("\"") >> rule(",") >> rule(tk_int);
+    rule font = rule("font") >> rule(":")
+                             >> rule("\"") >> rule(tk_ident) >> rule("\"")
+                             >> rule(",") >> rule(tk_int);
     // a textcolor
     rule textColor = rule("textColor") >> rule(":") >> hexaColor;
     // a border color
@@ -43,9 +44,11 @@ int main(int argc, char *argv[])
     // a property is any of font, text, color (they are all optional)
     rule property = font | textColor | borderColor;
 
-    // a button has a name (a identifier), and a device name (another identifier), and a sequence of properties.
+    // a button has a name (an identifier), and a device name (another
+    // identifier), and a sequence of properties.
     rule button = rule(tk_ident) >> rule('[') >> rule("device") >> rule("=")
-                                 >> rule(tk_ident) >> rule(']') >> rule('{') >> *property >> rule('}');
+                                 >> rule(tk_ident) >> rule(']') >> rule('{')
+                                 >> *property >> rule('}');
     // the whole file is just a list of buttons
     rule root = *button;
 
@@ -59,7 +62,11 @@ int main(int argc, char *argv[])
         std::string textColor;
         std::string borderColor;
         
-        void clear() { name = ""; device = ""; font.first = ""; font.second = 0; textColor = ""; borderColor = ""; }
+        void clear() {
+            name = ""; device = "";
+            font.first = ""; font.second = 0;
+            textColor = ""; borderColor = "";
+        }
     };
 
     std::vector<ButtonS> buttons;
@@ -108,6 +115,7 @@ int main(int argc, char *argv[])
     std::cout << "Parser status : " << std::boolalpha << f << std::endl;
     if (!f) {
         std::cout << pc.get_formatted_err_msg() << std::endl;
+        exit(-1);
     }
     
     for (auto x : buttons) {
