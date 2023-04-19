@@ -15,8 +15,6 @@ add_subdirectory (examples)
 enable_testing()
 add_subdirectory (test)
 
-
-
 # include(InstallRequiredSystemLibraries)
 # set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 # set(CPACK_PACKAGE_VERSION_MAJOR "${tipa_VERSION_MAJOR}")
@@ -26,7 +24,7 @@ add_subdirectory (test)
 
 ## For the find_package ..
 include(CMakePackageConfigHelpers)
-# generate the config file that is includes the exports
+# generate the config file that includes the exports
 configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/tipaConfig.cmake"
   INSTALL_DESTINATION "lib/cmake/example"

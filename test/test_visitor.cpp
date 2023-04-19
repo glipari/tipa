@@ -18,7 +18,7 @@
   along with TiPa. If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "catch.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 #include <iostream>
 #include <utility>

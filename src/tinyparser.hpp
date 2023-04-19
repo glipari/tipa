@@ -123,7 +123,6 @@ namespace tipa {
             for (auto q = p; q != end(collected); q++) *(it++) = fun(*q);
             collected.erase(p, collected.end());
         }
-
     };
 
 

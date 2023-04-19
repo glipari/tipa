@@ -1,3 +1,22 @@
+/*
+  Copyright 2015-2023 Giuseppe Lipari
+  email: giuseppe.lipari@univ-lille.fr
+  
+  This file is part of TiPa.
+
+  TiPa is free software: you can redistribute it and/or modify it
+  under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  TiPa is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+  License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with TiPa. If not, see <http://www.gnu.org/licenses/>
+ */
 #ifndef __PROPERTY_HPP__
 #define __PROPERTY_HPP__
 
@@ -10,12 +29,21 @@
 #include <genvisitor.hpp>
 #include <tinyparser.hpp>
 
-namespace tipa {
+/**
+   This file implements a tree of properties.
+   A property is a couple <name, value> where name is a string
+   and value is also a string.
 
+   This is used together with a parser to build a tree of properties.
+   (See the sysparser.cpp example).
+
+   It is then possible to use the visitor pattern to visit the tree.
+*/   
+namespace tipa {
     class PropertyLeaf;
     class PropertyNode;
 
-    using TypeList = std::tuple<PropertyLeaf, PropertyNode>;
+    using PropertyTypeList = std::tuple<PropertyLeaf, PropertyNode>;
 
     // the abstract class for representing properties.
     class AbsProperty {
@@ -28,7 +56,7 @@ namespace tipa {
     };
 
     // The leaf node of the tree: it contains a value
-    class PropertyLeaf : public AbsProperty, public Visitable<TypeList, PropertyLeaf> {
+    class PropertyLeaf : public AbsProperty, public Visitable<PropertyTypeList, PropertyLeaf> {
         std::string value;
     public:
         PropertyLeaf(const std::string &n, const std::string &v) :
@@ -37,7 +65,7 @@ namespace tipa {
     };
 
     // A list of abstract properties (intermediate node of the tree)
-    class PropertyNode : public AbsProperty, public Visitable<TypeList, PropertyNode> {
+    class PropertyNode : public AbsProperty, public Visitable<PropertyTypeList, PropertyNode> {
         // the list of children
         std::vector< std::shared_ptr<AbsProperty> > list;
     public:

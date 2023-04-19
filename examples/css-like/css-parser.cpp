@@ -118,3 +118,4 @@ int main(int argc, char *argv[])
         std::cout << "border : " << x.borderColor << std::endl;
     }    
 }
+

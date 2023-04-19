@@ -1,16 +1,26 @@
+Include(FetchContent)
+
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.0.1 # or a later release
+)
+
+FetchContent_MakeAvailable(Catch2)
+
 include_directories (.)
 include_directories (../src)
 
-set (TIPA_TEST_LIBRARY ${PROJECT_NAME}_test)
+# set (TIPA_TEST_LIBRARY ${PROJECT_NAME}_test)
 
-# Create Catch library to decrease compile times
-add_library (${TIPA_TEST_LIBRARY} ${LIBRARY_TYPE} test_main.cpp)
+# # Create Catch library to decrease compile times
+# add_library (${TIPA_TEST_LIBRARY} ${LIBRARY_TYPE} test_main.cpp)
 
 # Define a macro to simplify tests creation
 function (create_test name)
     add_executable (${name} ${ARGN})
     target_compile_features (${name} PRIVATE cxx_range_for)
-    target_link_libraries (${name} ${TIPA_TEST_LIBRARY} ${PROJECT_NAME})
+    target_link_libraries (${name} ${PROJECT_NAME} Catch2::Catch2WithMain)
     add_test (NAME ${name} COMMAND ${name})
 endfunction (create_test)
 

@@ -55,9 +55,7 @@ using namespace tipa;
   }
 
   In practice, each section is an hierarchical list of objects. So,
-  the results for each section should be a tree.  The number and the
-  names of the sections are fixed. I assume in this example they are
-  =Platform=, =Tasks=, =Mapping= 
+  the results for each section should be a tree. 
 
   Since the three sections are similar, in this example I write the
   parser for a single one. The idea is to generalise the parser so
@@ -68,7 +66,7 @@ using namespace tipa;
 /*
   Visitor for printing the file
  */
-class PrintVisitor : public Visitor<TypeList> {
+class PrintVisitor : public Visitor<PropertyTypeList> {
     int level = 1;
 public:
     void visit(PropertyNode &node) {
@@ -80,7 +78,7 @@ public:
             if (x == nullptr) 
                 cout << "!!!! Problem !!!!" << endl;
 
-            accept<TypeList>(x, *this);
+            accept<PropertyTypeList>(x, *this);
         }
         level -= 4;
     }
@@ -96,39 +94,49 @@ public:
 
 int main()
 {
-    // declare the rules
+    // forward declaration of the rules
     rule root_rule, root_name, plist, pnode, pleaf;
 
-    // rules
+    // ----------- rules --------------
+    // the top level rule is the section 
     root_rule = root_name >> rule('{') >> plist >> rule('}');
+    // the name of the section 
     root_name = rule(tk_ident);
+    // a list of property nodes
     plist = *pnode;
+    // a node is a leaf node or another section 
     pnode = pleaf | root_rule;
+    // a leaf node is an identifier, followed by a colon, followed by
+    // another identifier and the semicolon.
     pleaf = rule(tk_ident) >> rule(':') >> rule(tk_ident) >> rule(';');
 
-    // the tree builder
+    // The tree builder
     PropertyBuilder b;
-    using namespace std::placeholders;
 
     // semantic of the rules
-    pleaf    .set_action(std::bind(&PropertyBuilder::build_leaf,       &b, _1));
-    root_name.set_action(std::bind(&PropertyBuilder::build_root_begin, &b, _1));
-    root_rule.set_action(std::bind(&PropertyBuilder::build_root_end,   &b, _1));
+    // when you see a leaf, build a leaf node and add to the tree
+    pleaf    .set_action([&b](parser_context &pc) { b.build_leaf(pc); });
+    // when you see a section name, start building a section 
+    root_name.set_action([&b](parser_context &pc) { b.build_root_begin(pc); });
+    // when you finish a section, end building the section 
+    root_rule.set_action([&b](parser_context &pc) { b.build_root_end(pc); });
 
     // the example file
     stringstream str("sys {id : peppe; cpu { name : core0; } ol : pluto; }");    
 
     // preparing the parser with the file
     parser_context pc; pc.set_stream(str);
+                           
     try {
         root_rule.parse(pc);
     } catch(parse_exc &e) {
         cout << "Parse exception!" << endl;
+        cout << e.get_formatted_err_msg() << endl;
     }
 
     // now I visit the tree for printing it
     PrintVisitor pv;
     auto tree = b.get();
-    accept<TypeList>(*tree.get(), pv);
+    accept<PropertyTypeList>(*tree.get(), pv);
 }
 
